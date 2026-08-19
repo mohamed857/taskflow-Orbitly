@@ -187,6 +187,7 @@ export default function KanbanBoard() {
           Drag cards to transition statuses across the task workflow.
         </p>
       </div>
+      
 
       {loading ? (
         <div className="glass-panel p-16 text-center flex flex-col items-center justify-center gap-3">
