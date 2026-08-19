@@ -4,6 +4,7 @@ import { ListChecks, Clock, Loader, CheckCircle2, AlertTriangle, RefreshCw } fro
 import { tasks as tasksApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useI18n } from '../context/LanguageContext.jsx'
 import StatCard from '../components/StatCard.jsx'
 import StatusBreakdownChart from '../components/StatusBreakdownChart.jsx'
 import AssigneeLoadChart from '../components/AssigneeLoadChart.jsx'
@@ -24,6 +25,7 @@ const STATUS_BADGE_STYLE = {
 export default function Dashboard() {
   const { user, hasRole } = useAuth()
   const { push } = useToast()
+  const { t } = useI18n()
 
   const pushRef = useRef(push)
   useEffect(() => {
@@ -110,7 +112,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-panelBorder/40 pb-4">
         <div>
           <h2 className="text-lg font-bold font-display text-paper">
-            Welcome back, <span className="text-accent">{user?.name || user?.username || user?.email}</span>
+            {t('dash.welcome')}, <span className="text-accent">{user?.name || user?.username || user?.email}</span>
           </h2>
           <p className="text-xs text-fog mt-0.5">
             {isWorkspaceView
@@ -127,7 +129,7 @@ export default function Dashboard() {
           className="inline-flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 text-xs font-medium font-mono text-paper bg-panelAlt border border-panelBorder/60 rounded-lg hover:border-accent/40 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
         >
           <RefreshCw size={13} className={loading ? 'animate-spin text-accent' : 'text-fog'} />
-          <span>Refresh</span>
+          <span>{t('dash.refresh')}</span>
         </button>
       </div>
 

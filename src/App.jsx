@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
+import { LanguageProvider } from './context/LanguageContext.jsx'
 import { ChatDockProvider } from './context/ChatDockContext.jsx'
 import { RealtimeProvider } from './context/RealtimeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -27,6 +28,7 @@ import Profile from './pages/Profile.jsx'
 
 export default function App() {
   return (
+    <LanguageProvider>
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
@@ -88,5 +90,6 @@ export default function App() {
         </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
+    </LanguageProvider>
   )
 }
