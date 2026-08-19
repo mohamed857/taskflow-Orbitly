@@ -3,6 +3,7 @@ import { X, Minus, Send, Loader2 } from 'lucide-react'
 import { messages as messagesApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from './Avatar.jsx'
 
 function formatTime(timestamp) {
@@ -15,6 +16,7 @@ function formatTime(timestamp) {
 export default function ChatWindow({ partner, onClose }) {
   const { user } = useAuth()
   const { push } = useToast()
+  const { subscribeMessages, subscribeReads, isOnline } = useRealtime()
   const [thread, setThread] = useState([])
   const [loading, setLoading] = useState(true)
   const [minimized, setMinimized] = useState(false)
@@ -45,6 +47,24 @@ export default function ChatWindow({ partner, onClose }) {
       isMounted = false
     }
   }, [partner.id])
+
+  // Live incoming messages from this partner.
+  useEffect(() => {
+    return subscribeMessages((msg) => {
+      if (msg.sender?.id === partner.id || msg.recipient?.id === partner.id) {
+        setThread((cur) => (cur.some((m) => m.id === msg.id) ? cur : [...cur, msg]))
+      }
+    })
+  }, [subscribeMessages, partner.id])
+
+  // Live read receipts: partner saw our messages -> mark them seen.
+  useEffect(() => {
+    return subscribeReads((receipt) => {
+      if (receipt.readerId === partner.id) {
+        setThread((cur) => cur.map((m) => (m.sender?.id === user?.id ? { ...m, read: true } : m)))
+      }
+    })
+  }, [subscribeReads, partner.id, user?.id])
 
   // Scroll to bottom whenever messages arrive or dock expands
   useEffect(() => {
@@ -93,7 +113,7 @@ export default function ChatWindow({ partner, onClose }) {
     }
   }
 
-  const partnerName = partner.username || partner.email || 'User'
+  const partnerName = partner.name || partner.username || partner.email || 'User'
 
   return (
     <div
@@ -110,9 +130,13 @@ export default function ChatWindow({ partner, onClose }) {
           name={partnerName}
           size={24}
           src={avatarSrc(partner.avatarUrl)}
+          status={isOnline(partner.id) ? 'online' : 'offline'}
         />
         <span className="text-xs font-semibold text-paper flex-1 truncate font-display">
           {partnerName}
+          <span className={`ml-1.5 font-mono text-[9px] font-normal ${isOnline(partner.id) ? 'text-completed' : 'text-fog'}`}>
+            {isOnline(partner.id) ? 'online' : 'offline'}
+          </span>
         </span>
 
         {/* Minimize Action */}
@@ -197,6 +221,15 @@ export default function ChatWindow({ partner, onClose }) {
                 )
               })
             )}
+            {(() => {
+              let lastMine = null
+              for (let i = thread.length - 1; i >= 0; i--) {
+                if (thread[i].sender?.id === user?.id) { lastMine = thread[i]; break }
+              }
+              return lastMine?.read ? (
+                <p className="text-[9px] font-mono text-fog/80 text-right px-1">Seen</p>
+              ) : null
+            })()}
             <div ref={messagesEndRef} />
           </div>
 

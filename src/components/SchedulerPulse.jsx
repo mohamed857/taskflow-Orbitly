@@ -2,8 +2,17 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { system as systemApi } from '../api/client.js'
 
-// Mirrors TaskScheduler's server-side sweep (@Scheduled(fixedRate = 250000)).
-const SWEEP_INTERVAL_S = 250
+// Mirrors TaskScheduler's server-side sweep (now @Scheduled every 24 hours).
+const SWEEP_INTERVAL_S = 24 * 60 * 60
+
+function formatRemaining(sec) {
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const s = sec % 60
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
+  if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`
+  return `${s}s`
+}
 
 export default function SchedulerPulse({ onSweep }) {
   const [secondsLeft, setSecondsLeft] = useState(SWEEP_INTERVAL_S)
@@ -81,8 +90,6 @@ export default function SchedulerPulse({ onSweep }) {
   const progress = Math.min(1, Math.max(0, 1 - secondsLeft / SWEEP_INTERVAL_S))
   const circumference = 2 * Math.PI * 9
   const strokeDashoffset = circumference * (1 - progress)
-  const mm = Math.floor(secondsLeft / 60)
-  const ss = String(secondsLeft % 60).padStart(2, '0')
 
   return (
     <div
@@ -127,7 +134,7 @@ export default function SchedulerPulse({ onSweep }) {
       </div>
 
       <span className="font-mono text-xs text-fog hidden sm:inline-block leading-none">
-        next sweep <span className="text-paper font-medium">{mm}:{ss}</span>
+        next sweep <span className="text-paper font-medium">{formatRemaining(secondsLeft)}</span>
       </span>
     </div>
   )

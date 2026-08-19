@@ -3,7 +3,7 @@ import { UserPlus, X, Loader2, AlertCircle, KeyRound } from 'lucide-react'
 import Portal from './Portal.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
-const EMPTY = { username: '', email: '', password: '' }
+const EMPTY = { username: '', name: '', email: '', password: '' }
 
 // Helper to generate a random secure temporary password
 function generateTempPassword(length = 12) {
@@ -138,6 +138,22 @@ export default function CreateUserModal({ open, onClose, onSubmit }) {
                 placeholder="johndoe"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="label-eyebrow block mb-1.5" htmlFor="new-name">
+                Full name
+              </label>
+              <input
+                id="new-name"
+                type="text"
+                required
+                disabled={saving}
+                className="input-field w-full text-xs py-2 px-3 rounded-lg bg-panelAlt/50 focus:bg-panelAlt border border-panelBorder/60"
+                placeholder="John Doe"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </div>
 

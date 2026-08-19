@@ -6,7 +6,7 @@ import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react'
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ identifier: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -46,18 +46,19 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label className="label-eyebrow block mb-1.5" htmlFor="email">
-                Email
+              <label className="label-eyebrow block mb-1.5" htmlFor="identifier">
+                Email or username
               </label>
               <div className="relative">
                 <input
-                  id="email"
-                  type="email"
+                  id="identifier"
+                  type="text"
                   required
+                  autoComplete="username"
                   className="input-field pl-9"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@example.com"
+                  value={form.identifier}
+                  onChange={(e) => setForm({ ...form, identifier: e.target.value })}
+                  placeholder="you@example.com or your username"
                 />
                 <Mail className="w-4 h-4 text-fog absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

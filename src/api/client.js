@@ -1,6 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080'
 const TOKEN_KEY = 'taskflow_token'
 
+// WebSocket (STOMP) endpoint derived from the API base: http->ws, https->wss.
+export const WS_URL = `${API_BASE.replace(/^http/, 'ws')}/ws`
+
 import { emitToast } from '../utils/toastBus.js'
 
 export function getToken() {
@@ -157,6 +160,41 @@ export const comments = {
   remove: (taskId, commentId) => request(`/api/tasks/${taskId}/comments/${commentId}`, { method: 'DELETE' })
 }
 
+export const attachments = {
+  list: (taskId) => request(`/api/tasks/${taskId}/attachments`),
+  remove: (taskId, id) => request(`/api/tasks/${taskId}/attachments/${id}`, { method: 'DELETE' }),
+  upload: async (taskId, file, { silent = false } = {}) => {
+    const form = new FormData()
+    form.append('file', file)
+
+    let res
+    try {
+      res = await fetch(`${API_BASE}/api/tasks/${taskId}/attachments`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: form
+      })
+    } catch {
+      const message = 'Could not reach the server to upload the file.'
+      if (!silent) emitToast(message, 'error')
+      throw new ApiError(message, 0, null)
+    }
+
+    const payload = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      const message = payload.message || payload.error || 'Could not upload the file.'
+      if (!silent) emitToast(message, 'error')
+      throw new ApiError(message, res.status, payload)
+    }
+
+    return payload
+  }
+}
+
+// Builds an absolute URL for a server-stored asset path (avatars, attachments).
+export const assetUrl = avatarSrc
+
 export const system = {
   nextSweep: () => request('/api/system/next-sweep')
 }
@@ -166,6 +204,10 @@ export const notifications = {
   unreadCount: () => request('/api/notifications/unread-count'),
   markAsRead: (id) => request(`/api/notifications/${id}/read`, { method: 'PATCH' }),
   markAllAsRead: () => request('/api/notifications/read-all', { method: 'PATCH' })
+}
+
+export const presence = {
+  online: () => request('/api/presence')
 }
 
 export const messages = {

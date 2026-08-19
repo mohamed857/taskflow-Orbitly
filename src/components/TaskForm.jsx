@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { X, Calendar, User, AlertCircle, Loader2 } from 'lucide-react'
 import { toApiDateTime } from '../utils/date.js'
 import { PRIORITY_OPTIONS } from './PriorityBadge.jsx'
+import { displayName } from '../utils/userDisplay.js'
 import Portal from './Portal.jsx'
 
 const EMPTY = {
@@ -227,7 +228,7 @@ export default function TaskForm({
                   </option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id} className="bg-panel text-paper">
-                      {u.username || u.email}
+                      {displayName(u)}
                     </option>
                   ))}
                 </select>

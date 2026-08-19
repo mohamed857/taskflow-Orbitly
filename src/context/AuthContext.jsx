@@ -20,27 +20,28 @@ export function AuthProvider({ children }) {
       return
     }
 
-    let isMounted = true
     try {
       const me = await authApi.me()
-      if (isMounted) {
-        setUser(me)
-        setStatus('authenticated')
-      }
+      setUser(me)
+      setStatus('authenticated')
     } catch (err) {
-      if (isMounted) {
-        logout()
-      }
-    }
-
-    return () => {
-      isMounted = false
+      logout()
     }
   }, [logout])
 
   useEffect(() => {
     loadUser()
   }, [loadUser])
+
+  // The API layer dispatches this event when any request comes back 401 and
+  // clears the stored token. Without a listener the app kept its stale
+  // "authenticated" state and never redirected to /login. Reacting here flips
+  // the app to anonymous so ProtectedRoute sends the user to the login page.
+  useEffect(() => {
+    const handleUnauthorized = () => logout()
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [logout])
 
   const login = useCallback(
     async (credentials) => {

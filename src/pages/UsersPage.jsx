@@ -9,6 +9,7 @@ import StatCard from '../components/StatCard.jsx'
 import ChangeRoleModal from '../components/ChangeRoleModal.jsx'
 import CreateUserModal from '../components/CreateUserModal.jsx'
 import { canChangeRole, allowedTargetRoles, roleScopeHint } from '../utils/roles.js'
+import { displayName } from '../utils/userDisplay.js'
 
 export default function UsersPage() {
   const { user: actingUser, hasRole } = useAuth()
@@ -95,6 +96,7 @@ export default function UsersPage() {
       }
     } catch (err) {
       push(err.message || 'Could not update role.', 'error')
+      throw err // keep the modal open on failure
     }
   }
 
@@ -107,6 +109,7 @@ export default function UsersPage() {
       }
     } catch (err) {
       push(err.message || 'Could not create user.', 'error')
+      throw err // keep the modal open on failure
     }
   }
 
@@ -213,9 +216,12 @@ export default function UsersPage() {
                     <tr key={u.id} className="hover:bg-panelAlt/20 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <Avatar name={u.username || u.email} size={32} src={avatarSrc(u.avatarUrl)} />
+                          <Avatar name={displayName(u)} size={32} src={avatarSrc(u.avatarUrl)} />
                           <div className="min-w-0">
-                            <p className="text-paper text-xs font-semibold truncate">{u.username}</p>
+                            <p className="text-paper text-xs font-semibold truncate">
+                              {u.name || u.username}
+                              {u.name && <span className="text-fog font-normal font-mono ml-1.5">@{u.username}</span>}
+                            </p>
                             <p className="text-fog text-[11px] truncate">{u.email}</p>
                           </div>
                         </div>

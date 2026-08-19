@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { ChatDockProvider } from './context/ChatDockContext.jsx'
+import { RealtimeProvider } from './context/RealtimeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireRole from './components/RequireRole.jsx'
 import Layout from './components/Layout.jsx'
@@ -27,6 +28,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
+          <RealtimeProvider>
           <ChatDockProvider>
             <Routes>
               {/* Public Routes */}
@@ -78,6 +80,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </ChatDockProvider>
+          </RealtimeProvider>
         </ToastProvider>
       </AuthProvider>
     </ThemeProvider>

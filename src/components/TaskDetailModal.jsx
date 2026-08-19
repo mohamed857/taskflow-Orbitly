@@ -7,6 +7,8 @@ import StatusChip from './StatusChip.jsx'
 import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
+import AttachmentSection from './AttachmentSection.jsx'
 import CommentThread from './CommentThread.jsx'
 import TaskForm from './TaskForm.jsx'
 import Portal from './Portal.jsx'
@@ -34,12 +36,12 @@ function PersonRow({ label, person }) {
       {person ? (
         <div className="flex items-center gap-2 min-w-0 truncate">
           <Avatar
-            name={person.username || person.email}
+            name={displayName(person)}
             size={22}
             src={avatarSrc(person.avatarUrl)}
           />
           <span className="text-paper truncate font-semibold text-xs">
-            {person.username || person.email}
+            {displayName(person)}
           </span>
         </div>
       ) : (
@@ -131,6 +133,7 @@ useEffect(() => {
       setFormOpen(false)
     } catch (err) {
       push(err.message || 'Failed to create sub-task.', 'error')
+      throw err // keep the sub-task drawer open on failure
     }
   }
 
@@ -260,6 +263,11 @@ useEffect(() => {
                 )}
               </div>
             )}
+
+            {/* Attachments */}
+            <div className="pt-4 border-t border-panelBorder/80">
+              <AttachmentSection taskId={viewedTask.id} task={viewedTask} />
+            </div>
 
             {/* Comments Thread */}
             <div className="pt-4 border-t border-panelBorder/80">

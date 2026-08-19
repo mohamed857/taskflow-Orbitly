@@ -127,7 +127,7 @@ export default function CommentThread({ taskId }) {
         ) : (
           list.map((c) => {
             const canDelete = !c.isPending && (c.author?.id === user?.id || hasRole('ADMIN'))
-            const authorName = c.author?.username || c.author?.email || 'User'
+            const authorName = c.author?.name || c.author?.username || c.author?.email || 'User'
 
             return (
               <div 

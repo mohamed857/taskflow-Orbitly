@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
 import RoleBadge from './RoleBadge.jsx'
 import SchedulerPulse from './SchedulerPulse.jsx'
 import NotificationBell from './NotificationBell.jsx'
@@ -75,12 +76,12 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
               aria-haspopup="true"
             >
               <Avatar
-                name={user?.username || user?.email}
+                name={displayName(user)}
                 size={30}
                 src={avatarSrc(user?.avatarUrl)}
               />
               <span className="text-xs font-semibold text-paper hidden sm:inline max-w-[120px] truncate">
-                {user?.username || user?.email}
+                {displayName(user)}
               </span>
               <ChevronDown
                 size={14}
@@ -102,8 +103,11 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
                   {/* User Information Summary */}
                   <div className="px-4 py-3 border-b border-panelBorder/60 bg-panelAlt/30">
                     <p className="text-xs font-semibold text-paper truncate">
-                      {user?.username || 'User'}
+                      {displayName(user)}
                     </p>
+                    {user?.username && (
+                      <p className="text-[11px] text-accent font-mono truncate">@{user.username}</p>
+                    )}
                     <p className="text-[11px] text-fog font-mono truncate">
                       {user?.email}
                     </p>

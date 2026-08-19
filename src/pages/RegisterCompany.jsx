@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Eye, EyeOff, Building2, User, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Building2, User, AtSign, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
 
 // Creates a brand-new, fully isolated company. This is the ONLY way a new
 // workspace comes into existence now — no shared default workspace, no
@@ -13,6 +13,7 @@ export default function RegisterCompany() {
   const [form, setForm] = useState({
     companyName: '',
     ownerUsername: '',
+    ownerName: '',
     ownerEmail: '',
     ownerPassword: '',
   })
@@ -77,7 +78,7 @@ export default function RegisterCompany() {
             {/* Owner Username */}
             <div>
               <label className="label-eyebrow block mb-1.5" htmlFor="ownerUsername">
-                Your name
+                Username
               </label>
               <div className="relative">
                 <input
@@ -86,7 +87,25 @@ export default function RegisterCompany() {
                   className="input-field pl-9"
                   value={form.ownerUsername}
                   onChange={(e) => setForm({ ...form, ownerUsername: e.target.value })}
-                  placeholder="mohamed"
+                  placeholder="mohamed857"
+                />
+                <AtSign className="w-4 h-4 text-fog absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Owner Full Name */}
+            <div>
+              <label className="label-eyebrow block mb-1.5" htmlFor="ownerName">
+                Your name
+              </label>
+              <div className="relative">
+                <input
+                  id="ownerName"
+                  required
+                  className="input-field pl-9"
+                  value={form.ownerName}
+                  onChange={(e) => setForm({ ...form, ownerName: e.target.value })}
+                  placeholder="Mohamed Ahmed"
                 />
                 <User className="w-4 h-4 text-fog absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

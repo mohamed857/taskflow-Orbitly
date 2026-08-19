@@ -139,7 +139,7 @@ export default function Sidebar({ open, onClose }) {
             <Cpu size={14} className="text-accent shrink-0" />
             <span className="label-eyebrow text-[10px]">system status</span>
           </div>
-          <p className="text-[11px] text-fog font-mono">overdue sweep every ~250s</p>
+          <p className="text-[11px] text-fog font-mono">overdue sweep every ~24h</p>
         </div>
       </aside>
     </>

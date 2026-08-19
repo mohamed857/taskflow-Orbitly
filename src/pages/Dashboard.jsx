@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { ListChecks, Clock, Loader, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react'
 import { tasks as tasksApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -74,6 +75,16 @@ export default function Dashboard() {
     }
   }, [load])
 
+  // Refresh when the backend's overdue sweep fires (signalled via Layout).
+  const sweepSignal = useOutletContext()?.sweepSignal ?? 0
+  const prevSweepRef = useRef(sweepSignal)
+  useEffect(() => {
+    if (sweepSignal > 0 && sweepSignal !== prevSweepRef.current) {
+      prevSweepRef.current = sweepSignal
+      load()
+    }
+  }, [sweepSignal, load])
+
   // Memoized metric computations
   const metrics = useMemo(() => {
     const counts = {
@@ -99,7 +110,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-panelBorder/40 pb-4">
         <div>
           <h2 className="text-lg font-bold font-display text-paper">
-            Welcome back, <span className="text-accent">{user?.username || user?.email}</span>
+            Welcome back, <span className="text-accent">{user?.name || user?.username || user?.email}</span>
           </h2>
           <p className="text-xs text-fog mt-0.5">
             {isWorkspaceView

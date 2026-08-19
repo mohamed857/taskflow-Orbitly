@@ -157,7 +157,7 @@ export default function MessageBell() {
               </div>
             ) : (
               conversations.map((c) => {
-                const partnerName = c.partner?.username || c.partner?.email || 'User'
+                const partnerName = c.partner?.name || c.partner?.username || c.partner?.email || 'User'
                 const hasUnread = c.unreadCount > 0
 
                 return (

@@ -11,7 +11,8 @@ import TaskDetailModal from '../components/TaskDetailModal.jsx'
 import { STATUS_OPTIONS } from '../components/StatusChip.jsx'
 
 const VIEW_STORAGE_KEY = 'taskflow_task_view'
-const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
+// Must match the backend Priority enum (CRITICAL, not URGENT).
+const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 
 export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
   const { hasRole } = useAuth()
@@ -133,6 +134,9 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
       setFormOpen(false)
     } catch (err) {
       push(err.message || 'Failed to save task.', 'error')
+      // Re-throw so TaskForm keeps the drawer open with the user's input
+      // instead of closing on a failed save.
+      throw err
     }
   }
 
