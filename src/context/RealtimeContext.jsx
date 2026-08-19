@@ -18,6 +18,7 @@ export function RealtimeProvider({ children }) {
   const clientRef = useRef(null)
   const messageListeners = useRef(new Set())
   const readListeners = useRef(new Set())
+  const notificationListeners = useRef(new Set())
   const [onlineIds, setOnlineIds] = useState(() => new Set())
   const [connected, setConnected] = useState(false)
 
@@ -29,6 +30,11 @@ export function RealtimeProvider({ children }) {
   const subscribeReads = useCallback((cb) => {
     readListeners.current.add(cb)
     return () => readListeners.current.delete(cb)
+  }, [])
+
+  const subscribeNotifications = useCallback((cb) => {
+    notificationListeners.current.add(cb)
+    return () => notificationListeners.current.delete(cb)
   }, [])
 
   useEffect(() => {
@@ -60,6 +66,13 @@ export function RealtimeProvider({ children }) {
         try {
           const receipt = JSON.parse(frame.body)
           readListeners.current.forEach((cb) => cb(receipt))
+        } catch { /* ignore */ }
+      })
+
+      client.subscribe('/user/queue/notifications', (frame) => {
+        try {
+          const notification = JSON.parse(frame.body)
+          notificationListeners.current.forEach((cb) => cb(notification))
         } catch { /* ignore */ }
       })
 
@@ -99,8 +112,8 @@ export function RealtimeProvider({ children }) {
   const isOnline = useCallback((id) => onlineIds.has(id), [onlineIds])
 
   const value = useMemo(
-    () => ({ connected, onlineIds, isOnline, subscribeMessages, subscribeReads }),
-    [connected, onlineIds, isOnline, subscribeMessages, subscribeReads]
+    () => ({ connected, onlineIds, isOnline, subscribeMessages, subscribeReads, subscribeNotifications }),
+    [connected, onlineIds, isOnline, subscribeMessages, subscribeReads, subscribeNotifications]
   )
 
   return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>
