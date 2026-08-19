@@ -5,6 +5,7 @@ import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
 import { displayName } from '../utils/userDisplay.js'
+import LabelChips from './LabelChips.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const RAIL_COLOR = {
@@ -165,6 +166,8 @@ export default function TaskCards({
                     {task.description}
                   </p>
                 )}
+
+                <LabelChips labels={task.labels} />
               </div>
 
               {/* People Attribution - Separated with upper & lower borders */}

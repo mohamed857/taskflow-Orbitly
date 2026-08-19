@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
 import { displayName } from '../utils/userDisplay.js'
+import LabelChips from '../components/LabelChips.jsx'
 import TaskDetailModal from '../components/TaskDetailModal.jsx'
 import PriorityBadge from '../components/PriorityBadge.jsx'
 import { STATUS_OPTIONS } from '../components/StatusChip.jsx'
@@ -58,6 +59,8 @@ function Card({ task, draggable, onDragStart, dragging, onOpen }) {
             {formatDue(task.dueDate)}
           </span>
         </div>
+
+        <LabelChips labels={task.labels} />
 
         <div className="flex items-center justify-between text-xs pt-1 border-t border-panelBorder/30">
           {task.assignee ? (

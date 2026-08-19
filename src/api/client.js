@@ -199,6 +199,12 @@ export const attachments = {
 // Builds an absolute URL for a server-stored asset path (avatars, attachments).
 export const assetUrl = avatarSrc
 
+export const labels = {
+  list: () => request('/api/labels'),
+  create: (name, color) => request('/api/labels', { method: 'POST', body: { name, color } }),
+  remove: (id) => request(`/api/labels/${id}`, { method: 'DELETE' })
+}
+
 export const system = {
   nextSweep: () => request('/api/system/next-sweep')
 }

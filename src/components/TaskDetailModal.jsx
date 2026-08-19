@@ -8,6 +8,7 @@ import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
 import { displayName } from '../utils/userDisplay.js'
+import LabelChips from './LabelChips.jsx'
 import AttachmentSection from './AttachmentSection.jsx'
 import CommentThread from './CommentThread.jsx'
 import TaskForm from './TaskForm.jsx'
@@ -198,6 +199,8 @@ useEffect(() => {
                 </span>
               </div>
             </div>
+
+            <LabelChips labels={viewedTask.labels} />
           </div>
 
           {/* Scrollable Content Body */}

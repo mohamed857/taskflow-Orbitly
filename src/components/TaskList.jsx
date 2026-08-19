@@ -14,6 +14,7 @@ import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
 import { displayName } from '../utils/userDisplay.js'
+import LabelChips from './LabelChips.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function formatDue(dueDate) {
@@ -188,6 +189,7 @@ export default function TaskList({
                         {task.description}
                       </p>
                     )}
+                    <LabelChips labels={task.labels} className="mt-1" />
                   </td>
 
                   {/* Reporter */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { X, Calendar, User, AlertCircle, Loader2 } from 'lucide-react'
+import { X, Calendar, User, AlertCircle, Loader2, Tag, Plus } from 'lucide-react'
 import { toApiDateTime } from '../utils/date.js'
+import { labels as labelsApi } from '../api/client.js'
 import { PRIORITY_OPTIONS } from './PriorityBadge.jsx'
 import { displayName } from '../utils/userDisplay.js'
 import Portal from './Portal.jsx'
@@ -40,6 +41,10 @@ export default function TaskForm({
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [labelList, setLabelList] = useState([])
+  const [selectedLabelIds, setSelectedLabelIds] = useState([])
+  const [newLabelName, setNewLabelName] = useState('')
+  const [creatingLabel, setCreatingLabel] = useState(false)
   const isEdit = Boolean(initialTask)
 
   useEffect(() => {
@@ -51,11 +56,42 @@ export default function TaskForm({
         assigneeId: initialTask.assignee?.id ?? '',
         priority: initialTask.priority ?? 'MEDIUM'
       })
+      setSelectedLabelIds((initialTask.labels ?? []).map((l) => l.id))
     } else {
       setForm({ ...EMPTY, dueDate: formatForInput(defaultDueDate) ?? '' })
+      setSelectedLabelIds([])
     }
     setError(null)
   }, [initialTask, open, defaultDueDate])
+
+  // Load the workspace's labels when the form opens.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    labelsApi.list()
+      .then((data) => { if (!cancelled) setLabelList(Array.isArray(data) ? data : []) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [open])
+
+  const toggleLabel = (id) =>
+    setSelectedLabelIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
+
+  const createLabel = async () => {
+    const name = newLabelName.trim()
+    if (!name || creatingLabel) return
+    setCreatingLabel(true)
+    try {
+      const created = await labelsApi.create(name)
+      setLabelList((cur) => [...cur, created].sort((a, b) => a.name.localeCompare(b.name)))
+      setSelectedLabelIds((cur) => [...cur, created.id])
+      setNewLabelName('')
+    } catch (err) {
+      setError(err.message || 'Could not create the label.')
+    } finally {
+      setCreatingLabel(false)
+    }
+  }
 
   // Close on Escape key press
   useEffect(() => {
@@ -82,7 +118,8 @@ export default function TaskForm({
         description: form.description,
         dueDate,
         assigneeId: form.assigneeId ? Number(form.assigneeId) : null,
-        priority: form.priority
+        priority: form.priority,
+        labelIds: selectedLabelIds
       })
       onClose()
     } catch (err) {
@@ -232,6 +269,60 @@ export default function TaskForm({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Labels */}
+              <div>
+                <label className="label-eyebrow flex items-center gap-1.5 mb-1.5 font-mono text-xs text-fog">
+                  <Tag size={12} /> Labels
+                </label>
+                {labelList.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {labelList.map((l) => {
+                      const selected = selectedLabelIds.includes(l.id)
+                      return (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => toggleLabel(l.id)}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border transition-all ${
+                            selected ? '' : 'opacity-50 hover:opacity-100'
+                          }`}
+                          style={{
+                            color: l.color,
+                            borderColor: `${l.color}66`,
+                            backgroundColor: selected ? `${l.color}22` : 'transparent'
+                          }}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: l.color }} />
+                          {l.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <input
+                    value={newLabelName}
+                    onChange={(e) => setNewLabelName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        createLabel()
+                      }
+                    }}
+                    placeholder="New label…"
+                    className="input-field flex-1 text-xs py-1.5 px-2.5 bg-panelAlt/40 border border-panelBorder rounded-md"
+                  />
+                  <button
+                    type="button"
+                    onClick={createLabel}
+                    disabled={creatingLabel || !newLabelName.trim()}
+                    className="btn-ghost text-xs px-2 py-1.5 inline-flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+                  >
+                    {creatingLabel ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} add
+                  </button>
+                </div>
               </div>
 
               {/* Error Message Display */}

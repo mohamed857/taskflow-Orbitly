@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { LayoutGrid, List, ChevronDown, Search, Plus, RotateCcw } from 'lucide-react'
-import { tasks as tasksApi, users as usersApi } from '../api/client.js'
+import { tasks as tasksApi, users as usersApi, labels as labelsApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import TaskList from '../components/TaskList.jsx'
@@ -34,6 +34,8 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [priorityFilter, setPriorityFilter] = useState('ALL')
   const [hierarchyFilter, setHierarchyFilter] = useState('ALL') // ALL | MAIN | SUB
+  const [labelFilter, setLabelFilter] = useState('ALL')
+  const [labelList, setLabelList] = useState([])
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
@@ -85,6 +87,11 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
     }
   }, [fetchFn, canCreate])
 
+  // Load workspace labels once for the label filter.
+  useEffect(() => {
+    labelsApi.list().then((d) => setLabelList(Array.isArray(d) ? d : [])).catch(() => {})
+  }, [])
+
   // React strictly to sweepSignal updates
   useEffect(() => {
     if (sweepSignal > 0 && sweepSignal !== prevSignalRef.current) {
@@ -101,6 +108,7 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
       if (priorityFilter !== 'ALL' && t.priority !== priorityFilter) return false
       if (hierarchyFilter === 'MAIN' && t.parentTaskId) return false
       if (hierarchyFilter === 'SUB' && !t.parentTaskId) return false
+      if (labelFilter !== 'ALL' && !(t.labels ?? []).some((l) => String(l.id) === labelFilter)) return false
       if (q) {
         const titleMatch = t.title?.toLowerCase().includes(q)
         const descMatch = t.description?.toLowerCase().includes(q)
@@ -108,7 +116,7 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
       }
       return true
     })
-  }, [taskList, statusFilter, priorityFilter, hierarchyFilter, query])
+  }, [taskList, statusFilter, priorityFilter, hierarchyFilter, labelFilter, query])
 
   const openCreate = () => {
     setEditingTask(null)
@@ -165,7 +173,7 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
     }
   }
 
-  const isFiltered = statusFilter !== 'ALL' || priorityFilter !== 'ALL' || hierarchyFilter !== 'ALL' || query.trim() !== ''
+  const isFiltered = statusFilter !== 'ALL' || priorityFilter !== 'ALL' || hierarchyFilter !== 'ALL' || labelFilter !== 'ALL' || query.trim() !== ''
 
   return (
     <div className="space-y-5 animate-enter">
@@ -285,6 +293,23 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
           <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />
         </div>
 
+        {/* Label Dropdown */}
+        {labelList.length > 0 && (
+          <div className="relative inline-block">
+            <select
+              value={labelFilter}
+              onChange={(e) => setLabelFilter(e.target.value)}
+              className="appearance-none font-mono text-xs px-3 py-2 pr-8 rounded-lg border border-panelBorder/60 bg-panelAlt/40 text-fog hover:text-paper hover:border-panelBorder focus:outline-none focus:border-accent cursor-pointer transition-all"
+            >
+              <option value="ALL">Label: All</option>
+              {labelList.map((l) => (
+                <option key={l.id} value={String(l.id)}>Label: {l.name}</option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fog pointer-events-none" />
+          </div>
+        )}
+
         {/* Reset Active Filters Action */}
         {isFiltered && (
           <button
@@ -292,6 +317,7 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
               setStatusFilter('ALL')
               setPriorityFilter('ALL')
               setHierarchyFilter('ALL')
+              setLabelFilter('ALL')
               setQuery('')
             }}
             className="flex items-center gap-1.5 text-xs font-mono text-accent hover:text-accent/80 transition-colors ml-auto sm:ml-0 px-2 py-1"
