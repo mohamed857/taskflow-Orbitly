@@ -194,7 +194,7 @@ export default function KanbanBoard() {
           <p className="font-mono text-xs text-fog">Rendering Kanban state…</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
           {STATUS_OPTIONS.map((status) => {
             const meta = COLUMN_META[status]
             const items = columns[status] ?? []
@@ -209,7 +209,7 @@ export default function KanbanBoard() {
                 }}
                 onDragLeave={() => setOverColumn((cur) => (cur === status ? null : cur))}
                 onDrop={(e) => handleDrop(e, status)}
-                className={`rounded-xl border-2 border-dashed transition-all duration-200 p-2.5 min-h-[350px] space-y-3 bg-panel/30 ${
+                className={`rounded-xl border-2 border-dashed transition-all duration-200 p-2.5 h-fit space-y-3 bg-panel/30 ${
                   isOver
                     ? 'border-accent bg-accent/10 shadow-lg shadow-accent/5'
                     : 'border-panelBorder/50'
