@@ -16,7 +16,11 @@ function formatTime(timestamp) {
 export default function ChatWindow({ partner, onClose }) {
   const { user } = useAuth()
   const { push } = useToast()
-  const { subscribeMessages, subscribeReads, isOnline } = useRealtime()
+  const { subscribeMessages, subscribeReads, subscribeTyping, sendTyping, isOnline } = useRealtime()
+  const [partnerTyping, setPartnerTyping] = useState(false)
+  const typingSentAtRef = useRef(0)
+  const typingStopTimerRef = useRef(null)
+  const typingClearRef = useRef(null)
   const [thread, setThread] = useState([])
   const [loading, setLoading] = useState(true)
   const [minimized, setMinimized] = useState(false)
@@ -66,6 +70,31 @@ export default function ChatWindow({ partner, onClose }) {
     })
   }, [subscribeReads, partner.id, user?.id])
 
+  // Live typing indicator from this partner.
+  useEffect(() => {
+    return subscribeTyping((evt) => {
+      if (evt.fromUserId !== partner.id) return
+      setPartnerTyping(evt.typing)
+      if (evt.typing) {
+        clearTimeout(typingClearRef.current)
+        typingClearRef.current = setTimeout(() => setPartnerTyping(false), 4000)
+      }
+    })
+  }, [subscribeTyping, partner.id])
+
+  const notifyTyping = () => {
+    const now = Date.now()
+    if (now - typingSentAtRef.current > 2000) {
+      sendTyping(partner.id, true)
+      typingSentAtRef.current = now
+    }
+    clearTimeout(typingStopTimerRef.current)
+    typingStopTimerRef.current = setTimeout(() => {
+      sendTyping(partner.id, false)
+      typingSentAtRef.current = 0
+    }, 2500)
+  }
+
   // Scroll to bottom whenever messages arrive or dock expands
   useEffect(() => {
     if (!minimized) {
@@ -97,6 +126,8 @@ export default function ChatWindow({ partner, onClose }) {
     // Optimistic Update
     setThread((cur) => [...cur, tempMessage])
     setDraft('')
+    sendTyping(partner.id, false)
+    clearTimeout(typingStopTimerRef.current)
     setSending(true)
 
     try {
@@ -134,8 +165,8 @@ export default function ChatWindow({ partner, onClose }) {
         />
         <span className="text-xs font-semibold text-paper flex-1 truncate font-display">
           {partnerName}
-          <span className={`ml-1.5 font-mono text-[9px] font-normal ${isOnline(partner.id) ? 'text-completed' : 'text-fog'}`}>
-            {isOnline(partner.id) ? 'online' : 'offline'}
+          <span className={`ml-1.5 font-mono text-[9px] font-normal ${partnerTyping ? 'text-accent' : isOnline(partner.id) ? 'text-completed' : 'text-fog'}`}>
+            {partnerTyping ? 'typing…' : isOnline(partner.id) ? 'online' : 'offline'}
           </span>
         </span>
 
@@ -244,7 +275,10 @@ export default function ChatWindow({ partner, onClose }) {
               className="input-field flex-1 text-xs py-1.5 px-3 rounded-lg bg-panelAlt/50 focus:bg-panelAlt border border-panelBorder/60"
               placeholder="Type a message…"
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => {
+                setDraft(e.target.value)
+                notifyTyping()
+              }}
               disabled={sending}
             />
             <button

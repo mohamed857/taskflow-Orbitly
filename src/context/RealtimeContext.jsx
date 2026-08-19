@@ -19,6 +19,7 @@ export function RealtimeProvider({ children }) {
   const messageListeners = useRef(new Set())
   const readListeners = useRef(new Set())
   const notificationListeners = useRef(new Set())
+  const typingListeners = useRef(new Set())
   const [onlineIds, setOnlineIds] = useState(() => new Set())
   const [connected, setConnected] = useState(false)
 
@@ -35,6 +36,18 @@ export function RealtimeProvider({ children }) {
   const subscribeNotifications = useCallback((cb) => {
     notificationListeners.current.add(cb)
     return () => notificationListeners.current.delete(cb)
+  }, [])
+
+  const subscribeTyping = useCallback((cb) => {
+    typingListeners.current.add(cb)
+    return () => typingListeners.current.delete(cb)
+  }, [])
+
+  // Publish a typing signal to a recipient (fire-and-forget, not persisted).
+  const sendTyping = useCallback((recipientId, typing) => {
+    const client = clientRef.current
+    if (!client || !client.connected || !recipientId) return
+    client.publish({ destination: '/app/typing', body: JSON.stringify({ recipientId, typing }) })
   }, [])
 
   useEffect(() => {
@@ -76,6 +89,13 @@ export function RealtimeProvider({ children }) {
         } catch { /* ignore */ }
       })
 
+      client.subscribe('/user/queue/typing', (frame) => {
+        try {
+          const evt = JSON.parse(frame.body)
+          typingListeners.current.forEach((cb) => cb(evt))
+        } catch { /* ignore */ }
+      })
+
       client.subscribe('/topic/presence', (frame) => {
         try {
           const { userId, online } = JSON.parse(frame.body)
@@ -112,8 +132,11 @@ export function RealtimeProvider({ children }) {
   const isOnline = useCallback((id) => onlineIds.has(id), [onlineIds])
 
   const value = useMemo(
-    () => ({ connected, onlineIds, isOnline, subscribeMessages, subscribeReads, subscribeNotifications }),
-    [connected, onlineIds, isOnline, subscribeMessages, subscribeReads, subscribeNotifications]
+    () => ({
+      connected, onlineIds, isOnline,
+      subscribeMessages, subscribeReads, subscribeNotifications, subscribeTyping, sendTyping
+    }),
+    [connected, onlineIds, isOnline, subscribeMessages, subscribeReads, subscribeNotifications, subscribeTyping, sendTyping]
   )
 
   return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>

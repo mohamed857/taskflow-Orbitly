@@ -92,7 +92,11 @@ function NewConversationPicker({ currentUserId, onPick, onClose }) {
 export default function MessagesPage() {
   const { user } = useAuth()
   const { push } = useToast()
-  const { subscribeMessages, subscribeReads, isOnline } = useRealtime()
+  const { subscribeMessages, subscribeReads, subscribeTyping, sendTyping, isOnline } = useRealtime()
+  const [partnerTyping, setPartnerTyping] = useState(false)
+  const typingSentAtRef = useRef(0)
+  const typingStopTimerRef = useRef(null)
+  const typingClearRef = useRef(null)
   const [conversations, setConversations] = useState([])
   const [loadingList, setLoadingList] = useState(true)
   const [activePartner, setActivePartner] = useState(null)
@@ -153,6 +157,33 @@ export default function MessagesPage() {
     })
   }, [subscribeReads, user?.id])
 
+  // Live typing indicator from the active partner.
+  useEffect(() => {
+    return subscribeTyping((evt) => {
+      if (activePartnerRef.current?.id !== evt.fromUserId) return
+      setPartnerTyping(evt.typing)
+      if (evt.typing) {
+        clearTimeout(typingClearRef.current)
+        typingClearRef.current = setTimeout(() => setPartnerTyping(false), 4000)
+      }
+    })
+  }, [subscribeTyping])
+
+  // Tell the partner we're typing (throttled), and that we stopped after a pause.
+  const notifyTyping = () => {
+    if (!activePartner) return
+    const now = Date.now()
+    if (now - typingSentAtRef.current > 2000) {
+      sendTyping(activePartner.id, true)
+      typingSentAtRef.current = now
+    }
+    clearTimeout(typingStopTimerRef.current)
+    typingStopTimerRef.current = setTimeout(() => {
+      sendTyping(activePartner.id, false)
+      typingSentAtRef.current = 0
+    }, 2500)
+  }
+
   const loadConversations = () => {
     setLoadingList(true)
     messagesApi
@@ -169,6 +200,7 @@ export default function MessagesPage() {
   const openThread = (partner) => {
     setActivePartner(partner)
     setThread([])
+    setPartnerTyping(false)
     setLoadingThread(true)
 
     messagesApi
@@ -196,6 +228,8 @@ export default function MessagesPage() {
       const sent = await messagesApi.send(activePartner.id, content)
       setThread((cur) => [...cur, sent])
       setDraft('')
+      sendTyping(activePartner.id, false)
+      clearTimeout(typingStopTimerRef.current)
       setConversations((cur) => {
         const exists = cur.some((c) => c.partner.id === activePartner.id)
         const updated = exists
@@ -326,7 +360,9 @@ export default function MessagesPage() {
               <div>
                 <p className="text-xs font-bold text-paper">{displayName(activePartner)}</p>
                 <p className="text-[10px] font-mono">
-                  {isOnline(activePartner.id) ? (
+                  {partnerTyping ? (
+                    <span className="text-accent">typing…</span>
+                  ) : isOnline(activePartner.id) ? (
                     <span className="text-completed">● online</span>
                   ) : (
                     <span className="text-fog">offline</span>
@@ -391,7 +427,10 @@ export default function MessagesPage() {
                 className="input-field flex-1 text-xs py-2.5"
                 placeholder="Write a message…"
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value)
+                  notifyTyping()
+                }}
               />
               <button
                 type="submit"
