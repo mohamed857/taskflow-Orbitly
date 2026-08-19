@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Ultra-modern Light Theme */
+    --color-ink: 248 249 251;
+    --color-panel: 255 255 255;
+    --color-panelAlt: 241 243 247;
+    --color-panelBorder: 226 232 240;
+    --color-fog: 100 116 139;
+    --color-paper: 15 23 42;
+    --color-accent: 14 165 233; /* Cyan/Sky accent */
+    --color-overdue: 244 63 94;
+  }
+
+  .dark {
+    /* Cyber/Console Dark Theme */
+    --color-ink: 8 12 20;
+    --color-panel: 15 23 36;
+    --color-panelAlt: 22 32 49;
+    --color-panelBorder: 30 41 59;
+    --color-fog: 148 163 184;
+    --color-paper: 241 245 249;
+    --color-accent: 56 189 248; /* Vibrant Sky Blue */
+    --color-overdue: 251 113 133;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  html, body {
+    @apply bg-ink text-paper font-sans antialiased;
+  }
+
+  /* Ambient Mesh Background */
+  body {
+    position: relative;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: 
+      radial-gradient(circle at 10% 10%, rgb(var(--color-accent) / 0.12), transparent 40%),
+      radial-gradient(circle at 90% 80%, rgb(var(--color-accent) / 0.08), transparent 45%),
+      radial-gradient(circle at 50% 50%, rgb(var(--color-overdue) / 0.04), transparent 50%);
+    filter: blur(60px);
+    will-change: transform;
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  ::selection {
+    @apply bg-accent/30 text-paper;
+  }
+
+  /* Sleek Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-panelBorder));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-accent) / 0.8);
+  }
+}
+
+@layer components {
+  /* Modern Glassmorphic Panel */
+  .glass-panel {
+    @apply relative bg-panel/80 dark:bg-panel/70 backdrop-blur-md border border-panelBorder/70 rounded-xl overflow-hidden;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+    transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-panel:hover {
+    @apply border-accent/40;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -10px rgb(var(--color-accent) / 0.2);
+  }
+
+  /* Modern Glowing Primary Button */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center bg-accent text-slate-950 font-semibold rounded-lg px-4 py-2 text-sm select-none
+           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-out;
+    box-shadow: 0 0 20px -3px rgb(var(--color-accent) / 0.5);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 25px 0px rgb(var(--color-accent) / 0.7);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  /* Secondary / Ghost Button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center bg-panel/50 border border-panelBorder/80 text-fog font-medium rounded-lg px-4 py-2 text-sm
+           hover:border-accent/40 hover:text-paper hover:bg-panel/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+  }
+
+  /* Glass Dropdown Select */
+  .select-field {
+    @apply appearance-none bg-panel/70 backdrop-blur-md border border-panelBorder/80 text-paper rounded-lg px-3 py-1.5 pr-8 text-xs font-mono
+           hover:border-accent/50 focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238B94A3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+  }
+
+  /* Futuristic Inputs */
+  .input-field {
+    @apply w-full bg-panel/60 backdrop-blur-md border border-panelBorder/80 rounded-lg px-3.5 py-2 text-sm text-paper
+           placeholder:text-fog/50 transition-all duration-200;
+  }
+
+  .input-field:focus {
+    @apply border-accent outline-none bg-panel/90;
+    box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.15);
+  }
+
+  /* Eyebrow Label Typography */
+  .label-eyebrow {
+    @apply text-xs uppercase tracking-wider text-fog font-mono font-medium;
+  }
+
+  /* Pulse Status Dot */
+  .status-dot-pulse {
+    @apply relative inline-flex h-2 w-2 rounded-full bg-accent;
+  }
+  
+  .status-dot-pulse::before {
+    content: '';
+    @apply absolute -inset-0.5 rounded-full bg-accent opacity-75 animate-ping;
+  }
+
+  /* Entry Smooth Animation */
+  .animate-enter {
+    animation: enterFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes enterFade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
