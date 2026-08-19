@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
@@ -9,22 +10,33 @@ import { RealtimeProvider } from './context/RealtimeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireRole from './components/RequireRole.jsx'
 import Layout from './components/Layout.jsx'
-import Login from './pages/Login.jsx'
-import RegisterCompany from './pages/RegisterCompany.jsx'
-import ForgotPassword from './pages/ForgotPassword.jsx'
-import ResetPassword from './pages/ResetPassword.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import KanbanBoard from './pages/KanbanBoard.jsx'
-import CalendarPage from './pages/CalendarPage.jsx'
-import MessagesPage from './pages/MessagesPage.jsx'
-import MyTasks from './pages/MyTasks.jsx'
-import AssignedTasks from './pages/AssignedTasks.jsx'
-import WorkspaceTasks from './pages/WorkspaceTasks.jsx'
-import TeamTasks from './pages/TeamTasks.jsx'
-import UsersPage from './pages/UsersPage.jsx'
-import WorkspacesPage from './pages/WorkspacesPage.jsx'
-import TeamsPage from './pages/TeamsPage.jsx'
-import Profile from './pages/Profile.jsx'
+
+// Route-level code-splitting: each page becomes its own chunk, loaded on demand.
+const Login = lazy(() => import('./pages/Login.jsx'))
+const RegisterCompany = lazy(() => import('./pages/RegisterCompany.jsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
+const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
+const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
+const MessagesPage = lazy(() => import('./pages/MessagesPage.jsx'))
+const MyTasks = lazy(() => import('./pages/MyTasks.jsx'))
+const AssignedTasks = lazy(() => import('./pages/AssignedTasks.jsx'))
+const WorkspaceTasks = lazy(() => import('./pages/WorkspaceTasks.jsx'))
+const TeamTasks = lazy(() => import('./pages/TeamTasks.jsx'))
+const UsersPage = lazy(() => import('./pages/UsersPage.jsx'))
+const WorkspacesPage = lazy(() => import('./pages/WorkspacesPage.jsx'))
+const TeamsPage = lazy(() => import('./pages/TeamsPage.jsx'))
+const Profile = lazy(() => import('./pages/Profile.jsx'))
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+      <Loader2 size={26} className="animate-spin text-accent" />
+      <p className="font-mono text-xs text-fog">Loading…</p>
+    </div>
+  )
+}
 
 export default function App() {
   return (
@@ -34,6 +46,7 @@ export default function App() {
         <ToastProvider>
           <RealtimeProvider>
           <ChatDockProvider>
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
@@ -85,6 +98,7 @@ export default function App() {
               {/* Wildcard Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
           </ChatDockProvider>
           </RealtimeProvider>
         </ToastProvider>
