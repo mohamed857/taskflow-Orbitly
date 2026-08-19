@@ -113,6 +113,15 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          <p className="text-center mt-4">
+            <Link
+              to="/forgot-password"
+              className="text-xs text-fog hover:text-accent transition-colors"
+            >
+              Forgot your password?
+            </Link>
+          </p>
         </div>
 
         {/* Footer Navigation Link */}

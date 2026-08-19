@@ -81,7 +81,11 @@ export const auth = {
   registerCompany: (payload) => request('/api/auth/register-company', { method: 'POST', body: payload, auth: false }),
   register: (payload) => request('/api/auth/register', { method: 'POST', body: payload, auth: false }),
   login: (payload) => request('/api/auth/login', { method: 'POST', body: payload, auth: false }),
-  me: () => request('/api/users/me')
+  me: () => request('/api/users/me'),
+  forgotPassword: (identifier) =>
+    request('/api/auth/forgot-password', { method: 'POST', body: { identifier }, auth: false }),
+  resetPassword: (token, newPassword) =>
+    request('/api/auth/reset-password', { method: 'POST', body: { token, newPassword }, auth: false })
 }
 
 export const users = {

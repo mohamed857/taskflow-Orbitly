@@ -10,6 +10,8 @@ import RequireRole from './components/RequireRole.jsx'
 import Layout from './components/Layout.jsx'
 import Login from './pages/Login.jsx'
 import RegisterCompany from './pages/RegisterCompany.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import KanbanBoard from './pages/KanbanBoard.jsx'
 import CalendarPage from './pages/CalendarPage.jsx'
@@ -34,6 +36,8 @@ export default function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register-company" element={<RegisterCompany />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Authenticated Application Shell */}
               <Route
