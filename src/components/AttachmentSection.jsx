@@ -6,6 +6,23 @@ import { useToast } from '../context/ToastContext.jsx'
 
 const MAX_SIZE = 15 * 1024 * 1024 // 15MB — must match the backend
 
+// Must mirror ALLOWED_EXTENSIONS in AttachmentService (backend). Active types
+// (.html/.svg/.js) and executables are excluded to prevent stored-XSS/malware.
+const ALLOWED_EXTENSIONS = [
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp',
+  '.pdf', '.txt', '.csv', '.md', '.rtf',
+  '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+  '.zip'
+]
+const ACCEPT_ATTR = ALLOWED_EXTENSIONS.join(',')
+
+function hasAllowedExtension(name) {
+  if (typeof name !== 'string') return false
+  const dot = name.lastIndexOf('.')
+  if (dot < 0) return false
+  return ALLOWED_EXTENSIONS.includes(name.slice(dot).toLowerCase())
+}
+
 function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return ''
   if (bytes < 1024) return `${bytes} B`
@@ -52,6 +69,11 @@ export default function AttachmentSection({ taskId, task }) {
       return
     }
 
+    if (!hasAllowedExtension(file.name)) {
+      push('Unsupported file type. Allowed: images, PDF, Office docs, text and zip.', 'error')
+      return
+    }
+
     setUploading(true)
     try {
       const created = await attachmentsApi.upload(taskId, file)
@@ -94,7 +116,7 @@ export default function AttachmentSection({ taskId, task }) {
           {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
           <span>{uploading ? 'uploading…' : 'add file'}</span>
         </button>
-        <input ref={inputRef} type="file" className="hidden" onChange={handlePick} />
+        <input ref={inputRef} type="file" accept={ACCEPT_ATTR} className="hidden" onChange={handlePick} />
       </div>
 
       {loading ? (
