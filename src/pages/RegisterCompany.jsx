@@ -44,7 +44,7 @@ export default function RegisterCompany() {
           <div className="flex items-center gap-2">
             <span className="status-dot-pulse" />
             <span className="font-mono text-xs text-fog uppercase tracking-wider">
-              taskflow · new company
+              orbitly · new company
             </span>
           </div>
         </div>
@@ -191,6 +191,10 @@ export default function RegisterCompany() {
           >
             Sign in
           </Link>
+        </p>
+
+        <p className="text-[10px] text-fog/50 text-center mt-4 font-mono">
+          © {new Date().getFullYear()} Orbitly. All rights reserved.
         </p>
       </div>
     </div>

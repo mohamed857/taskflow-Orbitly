@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
 import ChatDock from './ChatDock.jsx'
+import Logo from './Logo.jsx'
 
 // Static route map for precise title lookups
 const ROUTE_TITLES = {
@@ -34,7 +35,7 @@ function resolvePageTitle(pathname) {
   if (pathname.startsWith('/teams/')) return 'Team Details'
   if (pathname.startsWith('/users/')) return 'User Profile'
 
-  return 'TaskFlow'
+  return 'Orbitly'
 }
 
 export default function Layout() {
@@ -79,6 +80,16 @@ export default function Layout() {
             <Outlet context={{ sweepSignal }} />
           </div>
         </main>
+
+        {/* Copyright / brand footer */}
+        <footer className="border-t border-panelBorder/40 px-4 sm:px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-fog">
+            <Logo size={15} className="text-accent shrink-0" />
+            <span className="text-[11px] font-mono">
+              © {new Date().getFullYear()} Orbitly. All rights reserved.
+            </span>
+          </div>
+        </footer>
       </div>
 
       {/* Global Floating Chat Dock */}

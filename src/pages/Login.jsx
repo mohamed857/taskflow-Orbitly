@@ -33,7 +33,7 @@ export default function Login() {
           <div className="flex items-center gap-2">
             <span className="status-dot-pulse" />
             <span className="font-mono text-xs text-fog uppercase tracking-wider">
-              taskflow · session
+              orbitly · session
             </span>
           </div>
         </div>
@@ -124,6 +124,10 @@ export default function Login() {
           >
             Create a company
           </Link>
+        </p>
+
+        <p className="text-[10px] text-fog/50 text-center mt-4 font-mono">
+          © {new Date().getFullYear()} Orbitly. All rights reserved.
         </p>
       </div>
     </div>

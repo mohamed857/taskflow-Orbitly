@@ -15,6 +15,7 @@ import {
   Cpu
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
+import Logo from './Logo.jsx'
 
 const NAV_SECTIONS = [
   {
@@ -69,9 +70,9 @@ export default function Sidebar({ open, onClose }) {
         {/* Brand Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-panelBorder/40">
           <div className="flex items-center gap-2.5">
-            <span className="status-dot-pulse" />
+            <Logo size={24} className="text-accent shrink-0" />
             <span className="font-display font-bold text-xl tracking-tight text-gradient-animated">
-              TaskFlow
+              Orbitly
             </span>
           </div>
           <button
