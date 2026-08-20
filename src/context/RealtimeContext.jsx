@@ -96,17 +96,20 @@ export function RealtimeProvider({ children }) {
         } catch { /* ignore */ }
       })
 
-      client.subscribe('/topic/presence', (frame) => {
-        try {
-          const { userId, online } = JSON.parse(frame.body)
-          setOnlineIds((prev) => {
-            const next = new Set(prev)
-            if (online) next.add(userId)
-            else next.delete(userId)
-            return next
-          })
-        } catch { /* ignore */ }
-      })
+      // Presence is scoped per workspace, so only subscribe to our own.
+      if (user?.workspaceId != null) {
+        client.subscribe(`/topic/presence/${user.workspaceId}`, (frame) => {
+          try {
+            const { userId, online } = JSON.parse(frame.body)
+            setOnlineIds((prev) => {
+              const next = new Set(prev)
+              if (online) next.add(userId)
+              else next.delete(userId)
+              return next
+            })
+          } catch { /* ignore */ }
+        })
+      }
 
       // Seed the current online snapshot (misses were possible before connect).
       presenceApi
