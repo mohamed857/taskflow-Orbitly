@@ -1,5 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080'
 const TOKEN_KEY = 'taskflow_token'
+const REFRESH_KEY = 'taskflow_refresh_token'
 
 // WebSocket (STOMP) endpoint derived from the API base: http->ws, https->wss.
 export const WS_URL = `${API_BASE.replace(/^http/, 'ws')}/ws`
@@ -15,6 +16,48 @@ export function setToken(token) {
   else localStorage.removeItem(TOKEN_KEY)
 }
 
+export function getRefreshToken() {
+  return localStorage.getItem(REFRESH_KEY)
+}
+
+export function setRefreshToken(token) {
+  if (token) localStorage.setItem(REFRESH_KEY, token)
+  else localStorage.removeItem(REFRESH_KEY)
+}
+
+// Single-flight refresh: if several requests 401 at once, only one refresh call
+// is made and the rest await its result.
+let refreshInFlight = null
+async function tryRefresh() {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return false
+  if (!refreshInFlight) {
+    refreshInFlight = fetch(`${API_BASE}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    })
+      .then(async (r) => {
+        if (!r.ok) return false
+        const d = await r.json().catch(() => null)
+        if (d?.token) {
+          setToken(d.token)
+          if (d.refreshToken) setRefreshToken(d.refreshToken)
+          return true
+        }
+        return false
+      })
+      .catch(() => false)
+      .finally(() => {
+        // Allow the next batch of 401s to trigger a new refresh.
+        setTimeout(() => {
+          refreshInFlight = null
+        }, 0)
+      })
+  }
+  return refreshInFlight
+}
+
 export class ApiError extends Error {
   constructor(message, status, payload) {
     super(message)
@@ -24,9 +67,10 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { method = 'GET', body, auth = true, silent = false } = {}) {
+async function request(path, opts = {}) {
+  const { method = 'GET', body, auth = true, silent = false, _retry = false } = opts
   const headers = {}
-  
+
   if (body) {
     headers['Content-Type'] = 'application/json'
   }
@@ -49,9 +93,18 @@ async function request(path, { method = 'GET', body, auth = true, silent = false
     throw new ApiError(message, 0, null)
   }
 
-  // Handle 401 Unauthorized across all endpoints automatically
+  // Handle 401 Unauthorized across all endpoints automatically. First try to
+  // silently renew the access token with the refresh token and retry once;
+  // only if that fails do we sign the user out.
   if (res.status === 401 && auth) {
+    if (!_retry && path !== '/api/auth/refresh') {
+      const refreshed = await tryRefresh()
+      if (refreshed) {
+        return request(path, { ...opts, _retry: true })
+      }
+    }
     setToken(null)
+    setRefreshToken(null)
     const message = 'Session expired. Please log in again.'
     if (!silent) emitToast(message, 'error')
     window.dispatchEvent(new CustomEvent('auth:unauthorized'))
@@ -81,6 +134,10 @@ export const auth = {
   registerCompany: (payload) => request('/api/auth/register-company', { method: 'POST', body: payload, auth: false }),
   register: (payload) => request('/api/auth/register', { method: 'POST', body: payload, auth: false }),
   login: (payload) => request('/api/auth/login', { method: 'POST', body: payload, auth: false }),
+  refresh: (refreshToken) =>
+    request('/api/auth/refresh', { method: 'POST', body: { refreshToken }, auth: false }),
+  logout: (refreshToken) =>
+    request('/api/auth/logout', { method: 'POST', body: { refreshToken }, auth: false, silent: true }),
   me: () => request('/api/users/me'),
   forgotPassword: (identifier) =>
     request('/api/auth/forgot-password', { method: 'POST', body: { identifier }, auth: false }),

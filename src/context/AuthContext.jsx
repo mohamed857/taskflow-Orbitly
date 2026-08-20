@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { auth as authApi, getToken, setToken } from '../api/client.js'
+import { auth as authApi, getToken, setToken, getRefreshToken, setRefreshToken } from '../api/client.js'
 
 const AuthContext = createContext(null)
 
@@ -8,7 +8,13 @@ export function AuthProvider({ children }) {
   const [status, setStatus] = useState('checking') // checking | authenticated | anonymous
 
   const logout = useCallback(() => {
+    // Best-effort server-side revoke of this session's refresh token.
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      authApi.logout(refreshToken).catch(() => {})
+    }
     setToken(null)
+    setRefreshToken(null)
     setUser(null)
     setStatus('anonymous')
   }, [])
@@ -45,8 +51,9 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(
     async (credentials) => {
-      const { token } = await authApi.login(credentials)
+      const { token, refreshToken } = await authApi.login(credentials)
       setToken(token)
+      setRefreshToken(refreshToken)
       await loadUser()
     },
     [loadUser]
