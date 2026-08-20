@@ -11,6 +11,7 @@ import { displayName } from '../utils/userDisplay.js'
 import LabelChips from './LabelChips.jsx'
 import AttachmentSection from './AttachmentSection.jsx'
 import CommentThread from './CommentThread.jsx'
+import ActivityTimeline from './ActivityTimeline.jsx'
 import TaskForm from './TaskForm.jsx'
 import Portal from './Portal.jsx'
 
@@ -275,6 +276,11 @@ useEffect(() => {
             {/* Comments Thread */}
             <div className="pt-4 border-t border-panelBorder/80">
               <CommentThread taskId={viewedTask.id} />
+            </div>
+
+            {/* Activity Timeline */}
+            <div className="pt-4 border-t border-panelBorder/80">
+              <ActivityTimeline taskId={viewedTask.id} />
             </div>
           </div>
         </div>

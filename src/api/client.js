@@ -158,6 +158,10 @@ export const tasks = {
   remove: (id) => request(`/api/tasks/${id}`, { method: 'DELETE' })
 }
 
+export const activity = {
+  list: (taskId) => request(`/api/tasks/${taskId}/activity`)
+}
+
 export const comments = {
   list: (taskId) => request(`/api/tasks/${taskId}/comments`),
   add: (taskId, content) => request(`/api/tasks/${taskId}/comments`, { method: 'POST', body: { content } }),
