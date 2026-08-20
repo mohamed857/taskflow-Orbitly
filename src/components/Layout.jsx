@@ -86,7 +86,7 @@ export default function Layout() {
           <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-fog">
             <Logo size={15} className="text-accent shrink-0" />
             <span className="text-[11px] font-mono">
-              © {new Date().getFullYear()} Orbitly. All rights reserved.
+              © {new Date().getFullYear()} Orbitly by Kvant. All rights reserved.
             </span>
           </div>
         </footer>

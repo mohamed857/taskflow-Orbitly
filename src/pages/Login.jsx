@@ -138,7 +138,7 @@ export default function Login() {
         </p>
 
         <p className="text-[10px] text-fog/50 text-center mt-4 font-mono">
-          © {new Date().getFullYear()} Orbitly. All rights reserved.
+          © {new Date().getFullYear()} Orbitly by Kvant. All rights reserved.
         </p>
       </div>
     </div>
