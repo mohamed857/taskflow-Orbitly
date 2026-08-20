@@ -4,11 +4,11 @@ import { comments as commentsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import Avatar from './Avatar.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return dateStr
+  const d = parseServerDate(dateStr)
+  if (!d) return dateStr || ''
   const diffMs = Date.now() - d.getTime()
   const diffMin = Math.floor(diffMs / 60000)
   if (diffMin < 1) return 'just now'

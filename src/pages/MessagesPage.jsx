@@ -7,11 +7,11 @@ import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import { displayName } from '../utils/userDisplay.js'
 import Portal from '../components/Portal.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'now'
   if (diffMin < 60) return `${diffMin}m`
