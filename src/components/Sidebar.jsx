@@ -11,6 +11,7 @@ import {
   Building2,
   Users2,
   UserCircle,
+  CreditCard,
   X,
   Cpu
 } from 'lucide-react'
@@ -43,6 +44,7 @@ const NAV_SECTIONS = [
       { to: '/users', tkey: 'nav.team', icon: Users },
       { to: '/teams', tkey: 'nav.teams', icon: Users2 },
       { to: '/workspaces', tkey: 'nav.workspace', icon: Building2 },
+      { to: '/subscription', tkey: 'nav.subscription', icon: CreditCard, roles: ['ADMIN', 'MANAGER'] },
       { to: '/profile', tkey: 'nav.profile', icon: UserCircle }
     ]
   }

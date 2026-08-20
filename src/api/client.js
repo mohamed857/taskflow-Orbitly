@@ -281,6 +281,15 @@ export const presence = {
   online: () => request('/api/presence')
 }
 
+export const plans = {
+  list: () => request('/api/plans', { auth: false })
+}
+
+export const subscription = {
+  get: () => request('/api/subscription'),
+  change: (plan) => request('/api/subscription', { method: 'PUT', body: { plan } })
+}
+
 export const messages = {
   conversations: () => request('/api/messages/conversations'),
   thread: (userId) => request(`/api/messages/conversations/${userId}`),
