@@ -115,6 +115,14 @@ async function request(path, opts = {}) {
   const isJson = res.headers.get('content-type')?.includes('application/json')
   const data = isJson ? await res.json().catch(() => null) : null
 
+  // Plan/usage limit reached (402) -> let the app prompt an upgrade instead of
+  // a plain error toast.
+  if (res.status === 402 && data?.code === 'PLAN_LIMIT') {
+    const message = data?.message || 'You have reached your plan limit.'
+    window.dispatchEvent(new CustomEvent('plan:limit', { detail: message }))
+    throw new ApiError(message, 402, data)
+  }
+
   if (!res.ok) {
     const message =
       data?.message ||

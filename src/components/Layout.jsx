@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
 import ChatDock from './ChatDock.jsx'
@@ -42,6 +42,15 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sweepSignal, setSweepSignal] = useState(0)
   const location = useLocation()
+  const navigate = useNavigate()
+
+  // When any action hits a plan limit, take the user to the subscription page
+  // to upgrade. The message itself is surfaced by the calling page's toast.
+  useEffect(() => {
+    const onPlanLimit = () => navigate('/subscription')
+    window.addEventListener('plan:limit', onPlanLimit)
+    return () => window.removeEventListener('plan:limit', onPlanLimit)
+  }, [navigate])
 
   // Compute title dynamically based on location
   const title = useMemo(
