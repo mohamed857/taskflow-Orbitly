@@ -79,12 +79,12 @@ export default function Pricing() {
               return (
                 <div
                   key={p.key}
-                  className={`glass-panel p-6 flex flex-col relative ${
+                  className={`glass-panel p-6 flex flex-col ${
                     highlight ? 'border-accent ring-1 ring-accent/40' : 'border-panelBorder'
                   }`}
                 >
                   {highlight && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-[10px] font-bold text-white">
+                    <span className="self-start inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold text-white mb-2">
                       <Star size={11} /> {ar ? 'الأكثر شيوعًا' : 'Most popular'}
                     </span>
                   )}

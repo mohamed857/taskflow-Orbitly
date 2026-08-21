@@ -128,12 +128,12 @@ export default function Subscription() {
             return (
               <div
                 key={p.key}
-                className={`glass-panel p-5 flex flex-col relative ${
+                className={`glass-panel p-5 flex flex-col ${
                   current ? 'border-accent ring-1 ring-accent/40' : 'border-panelBorder'
                 }`}
               >
-                {highlight && !current && (
-                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-accent/90 px-2.5 py-0.5 text-[9px] font-bold text-white">
+                {highlight && (
+                  <span className="self-start inline-flex items-center gap-1 rounded-full bg-accent/90 px-2 py-0.5 text-[9px] font-bold text-white mb-2">
                     <Star size={10} /> {ar ? 'شائع' : 'Popular'}
                   </span>
                 )}
