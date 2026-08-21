@@ -124,9 +124,20 @@ async function request(path, opts = {}) {
   }
 
   if (!res.ok) {
+    // Surface the exact reason the server gave. The backend uses "message" for
+    // some errors and "error" for others, and validation errors come back as a
+    // { field: message } map — cover all three before a generic fallback.
+    const fieldErrors =
+      data && typeof data === 'object' && !data.message && !data.error
+        ? Object.values(data).filter((v) => typeof v === 'string')
+        : []
     const message =
       data?.message ||
-      (res.status === 403
+      data?.error ||
+      (fieldErrors.length ? fieldErrors.join(' · ') : null) ||
+      (res.status === 401
+        ? 'Invalid email or password. Please check and try again.'
+        : res.status === 403
         ? "You don't have permission to do that."
         : res.status === 404
         ? 'Requested resource was not found.'
