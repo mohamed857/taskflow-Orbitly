@@ -303,7 +303,7 @@ export default function UsersPage() {
         onSubmit={handleRoleSubmit}
       />
 
-      <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} />
+      <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} teams={teamList} />
     </div>
   )
 }

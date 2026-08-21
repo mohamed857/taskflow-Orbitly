@@ -132,7 +132,7 @@ useEffect(() => {
       const created = await tasksApi.create({ ...payload, parentTaskId: viewedTask.id })
       setSubtasks((cur) => [...cur, created])
       push('Sub-task created successfully.', 'success')
-      setFormOpen(false)
+      return created
     } catch (err) {
       push(err.message || 'Failed to create sub-task.', 'error')
       throw err // keep the sub-task drawer open on failure

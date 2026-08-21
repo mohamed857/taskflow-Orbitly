@@ -3,7 +3,7 @@ import { UserPlus, X, Loader2, AlertCircle, KeyRound } from 'lucide-react'
 import Portal from './Portal.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
-const EMPTY = { username: '', name: '', email: '', password: '' }
+const EMPTY = { username: '', name: '', email: '', password: '', teamId: '' }
 
 // Helper to generate a random secure temporary password
 function generateTempPassword(length = 12) {
@@ -15,7 +15,7 @@ function generateTempPassword(length = 12) {
   return pwd
 }
 
-export default function CreateUserModal({ open, onClose, onSubmit }) {
+export default function CreateUserModal({ open, onClose, onSubmit, teams = [] }) {
   const { user, hasRole } = useAuth()
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
@@ -66,7 +66,7 @@ export default function CreateUserModal({ open, onClose, onSubmit }) {
     setError(null)
     setSaving(true)
     try {
-      await onSubmit(form)
+      await onSubmit({ ...form, teamId: form.teamId ? Number(form.teamId) : null })
       onClose()
     } catch (err) {
       setError(err.message || 'Could not create user.')
@@ -202,6 +202,27 @@ export default function CreateUserModal({ open, onClose, onSubmit }) {
               <p className="text-[11px] text-fog/80 mt-1 font-mono">
                 At least 8 characters. Share this directly with them.
               </p>
+            </div>
+
+            {/* Team (optional) */}
+            <div>
+              <label className="label-eyebrow block mb-1.5" htmlFor="new-team">
+                Team <span className="text-fog font-normal">(optional)</span>
+              </label>
+              <select
+                id="new-team"
+                disabled={saving}
+                className="input-field w-full text-xs py-2 px-3 rounded-lg bg-panelAlt/50 focus:bg-panelAlt border border-panelBorder/60 cursor-pointer"
+                value={form.teamId}
+                onChange={(e) => setForm({ ...form, teamId: e.target.value })}
+              >
+                <option value="">No team</option>
+                {teams.map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Error Message */}

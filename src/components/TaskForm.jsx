@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
-import { X, Calendar, User, AlertCircle, Loader2, Tag, Plus } from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
+import { X, Calendar, User, AlertCircle, Loader2, Tag, Plus, Users2, Paperclip } from 'lucide-react'
 import { toApiDateTime } from '../utils/date.js'
-import { labels as labelsApi } from '../api/client.js'
+import { labels as labelsApi, teams as teamsApi, attachments as attachmentsApi } from '../api/client.js'
 import { PRIORITY_OPTIONS } from './PriorityBadge.jsx'
 import { displayName } from '../utils/userDisplay.js'
 import Portal from './Portal.jsx'
@@ -11,7 +11,8 @@ const EMPTY = {
   description: '',
   dueDate: '',
   assigneeId: '',
-  priority: 'MEDIUM'
+  priority: 'MEDIUM',
+  teamId: ''
 }
 
 // Helper to format ISO date string to HTML datetime-local format (YYYY-MM-DDTHH:mm)
@@ -45,6 +46,9 @@ export default function TaskForm({
   const [selectedLabelIds, setSelectedLabelIds] = useState([])
   const [newLabelName, setNewLabelName] = useState('')
   const [creatingLabel, setCreatingLabel] = useState(false)
+  const [teamList, setTeamList] = useState([])
+  const [pendingFiles, setPendingFiles] = useState([])
+  const fileInputRef = useRef(null)
   const isEdit = Boolean(initialTask)
 
   useEffect(() => {
@@ -54,15 +58,27 @@ export default function TaskForm({
         description: initialTask.description ?? '',
         dueDate: formatForInput(initialTask.dueDate),
         assigneeId: initialTask.assignee?.id ?? '',
-        priority: initialTask.priority ?? 'MEDIUM'
+        priority: initialTask.priority ?? 'MEDIUM',
+        teamId: initialTask.team?.id ?? ''
       })
       setSelectedLabelIds((initialTask.labels ?? []).map((l) => l.id))
     } else {
       setForm({ ...EMPTY, dueDate: formatForInput(defaultDueDate) ?? '' })
       setSelectedLabelIds([])
     }
+    setPendingFiles([])
     setError(null)
   }, [initialTask, open, defaultDueDate])
+
+  // Load the workspace's teams when the form opens.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    teamsApi.list()
+      .then((data) => { if (!cancelled) setTeamList(Array.isArray(data) ? data : []) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [open])
 
   // Load the workspace's labels when the form opens.
   useEffect(() => {
@@ -113,14 +129,26 @@ export default function TaskForm({
     setError(null)
     try {
       const dueDate = toApiDateTime(form.dueDate)
-      await onSubmit({
+      const created = await onSubmit({
         title: form.title,
         description: form.description,
         dueDate,
         assigneeId: form.assigneeId ? Number(form.assigneeId) : null,
         priority: form.priority,
-        labelIds: selectedLabelIds
+        labelIds: selectedLabelIds,
+        teamId: form.teamId ? Number(form.teamId) : null
       })
+
+      // On a fresh task, upload any files the user attached during creation.
+      if (!isEdit && pendingFiles.length && created?.id) {
+        for (const file of pendingFiles) {
+          try {
+            await attachmentsApi.upload(created.id, file, { silent: true })
+          } catch {
+            /* a failed attachment shouldn't undo the created task */
+          }
+        }
+      }
       onClose()
     } catch (err) {
       setError(err.message || 'Could not save the task.')
@@ -270,6 +298,78 @@ export default function TaskForm({
                   ))}
                 </select>
               </div>
+
+              {/* Team */}
+              <div>
+                <label
+                  className="label-eyebrow flex items-center gap-1.5 mb-1.5 font-mono text-xs text-fog"
+                  htmlFor="team"
+                >
+                  <Users2 size={12} /> Team
+                </label>
+                <select
+                  id="team"
+                  className="input-field w-full bg-panelAlt/40 border border-panelBorder rounded-md px-3 py-2 text-sm text-paper focus:outline-none focus:ring-1 focus:ring-accent/50 transition-colors cursor-pointer"
+                  value={form.teamId}
+                  onChange={(e) => setForm({ ...form, teamId: e.target.value })}
+                >
+                  <option value="" className="bg-panel text-fog">
+                    Default (your team)
+                  </option>
+                  {teamList.map((tm) => (
+                    <option key={tm.id} value={tm.id} className="bg-panel text-paper">
+                      {tm.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Attachments (new task only) */}
+              {!isEdit && (
+                <div>
+                  <label className="label-eyebrow flex items-center gap-1.5 mb-1.5 font-mono text-xs text-fog">
+                    <Paperclip size={12} /> Attachments
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const picked = Array.from(e.target.files || [])
+                      e.target.value = ''
+                      if (picked.length) setPendingFiles((cur) => [...cur, ...picked])
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="btn-ghost text-xs px-2.5 py-1.5 inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus size={12} /> add files
+                  </button>
+                  {pendingFiles.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {pendingFiles.map((f, i) => (
+                        <li
+                          key={`${f.name}-${i}`}
+                          className="flex items-center justify-between gap-2 text-[11px] text-fog bg-panelAlt/40 border border-panelBorder/60 rounded px-2 py-1"
+                        >
+                          <span className="truncate">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setPendingFiles((cur) => cur.filter((_, x) => x !== i))}
+                            className="text-fog hover:text-overdue shrink-0"
+                            title="Remove"
+                          >
+                            <X size={12} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
 
               {/* Labels */}
               <div>

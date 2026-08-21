@@ -134,12 +134,13 @@ export default function TaskBoard({ fetchFn, emptyHint, allowCreate = false }) {
         const updated = await tasksApi.update(editingTask.id, payload)
         setTaskList((prev) => prev.map((t) => (t.id === editingTask.id ? updated : t)))
         push('Task updated.')
+        return updated
       } else {
         const created = await tasksApi.create(payload)
         setTaskList((prev) => [created, ...prev])
         push('Task created.')
+        return created
       }
-      setFormOpen(false)
     } catch (err) {
       push(err.message || 'Failed to save task.', 'error')
       // Re-throw so TaskForm keeps the drawer open with the user's input
