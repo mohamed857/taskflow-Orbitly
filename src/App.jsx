@@ -16,6 +16,8 @@ const Login = lazy(() => import('./pages/Login.jsx'))
 const RegisterCompany = lazy(() => import('./pages/RegisterCompany.jsx'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+const Pricing = lazy(() => import('./pages/Pricing.jsx'))
+const Subscription = lazy(() => import('./pages/Subscription.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
@@ -53,6 +55,7 @@ export default function App() {
               <Route path="/register-company" element={<RegisterCompany />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/pricing" element={<Pricing />} />
 
               {/* Authenticated Application Shell */}
               <Route
@@ -93,6 +96,7 @@ export default function App() {
                 <Route path="workspaces" element={<WorkspacesPage />} />
                 <Route path="teams" element={<TeamsPage />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="subscription" element={<Subscription />} />
               </Route>
 
               {/* Wildcard Fallback */}

@@ -6,11 +6,11 @@ import { useChatDock } from '../context/ChatDockContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from './Avatar.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'now'
   if (diffMin < 60) return `${diffMin}m`

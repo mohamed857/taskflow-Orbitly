@@ -4,6 +4,7 @@ import { notifications as notificationsApi, tasks as tasksApi } from '../api/cli
 import { useToast } from '../context/ToastContext.jsx'
 import { useRealtime } from '../context/RealtimeContext.jsx'
 import TaskDetailModal from './TaskDetailModal.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 const ICONS = {
   TASK_ASSIGNED: UserPlus,
@@ -15,9 +16,8 @@ const ICONS = {
 }
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'just now'
   if (diffMin < 60) return `${diffMin}m ago`

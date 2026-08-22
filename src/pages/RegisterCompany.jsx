@@ -3,6 +3,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { Eye, EyeOff, Building2, User, AtSign, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
 
+// Plans offered at signup. Kept in sync with the backend Plan enum.
+const PLAN_OPTIONS = [
+  { key: 'FREE', name: 'Free', price: 0, meta: '5 members · 1 team' },
+  { key: 'STARTER', name: 'Starter', price: 4, meta: '15 members · 3 teams' },
+  { key: 'PRO', name: 'Pro', price: 8, meta: '50 members · 15 teams' },
+  { key: 'BUSINESS', name: 'Business', price: 16, meta: 'Unlimited' }
+]
+
 // Creates a brand-new, fully isolated company. This is the ONLY way a new
 // workspace comes into existence now — no shared default workspace, no
 // browsing other companies. The person who signs up here becomes the
@@ -16,6 +24,7 @@ export default function RegisterCompany() {
     ownerName: '',
     ownerEmail: '',
     ownerPassword: '',
+    plan: 'FREE',
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -158,6 +167,37 @@ export default function RegisterCompany() {
               </div>
             </div>
 
+            {/* Plan selection */}
+            <div>
+              <label className="label-eyebrow block mb-1.5">Choose a plan</label>
+              <div className="grid grid-cols-2 gap-2">
+                {PLAN_OPTIONS.map((p) => {
+                  const selected = form.plan === p.key
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setForm({ ...form, plan: p.key })}
+                      className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+                        selected
+                          ? 'border-accent bg-accent/10'
+                          : 'border-panelBorder hover:border-fog/50'
+                      }`}
+                    >
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs font-semibold text-paper">{p.name}</span>
+                        <span className="text-[11px] font-mono text-fog">
+                          {p.price === 0 ? 'Free' : `$${p.price}`}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-fog mt-0.5">{p.meta}</p>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[10px] text-fog/70 mt-1.5">You can change your plan anytime.</p>
+            </div>
+
             {/* Error Message Display */}
             {error && (
               <div className="p-3 rounded-lg bg-overdue/10 border border-overdue/20 text-overdue text-xs font-mono">
@@ -194,7 +234,7 @@ export default function RegisterCompany() {
         </p>
 
         <p className="text-[10px] text-fog/50 text-center mt-4 font-mono">
-          © {new Date().getFullYear()} Orbitly. All rights reserved.
+          © {new Date().getFullYear()} Orbitly by Kvant. All rights reserved.
         </p>
       </div>
     </div>

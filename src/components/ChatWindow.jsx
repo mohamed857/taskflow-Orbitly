@@ -5,12 +5,10 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from './Avatar.jsx'
+import { formatServerTime } from '../utils/serverTime.js'
 
 function formatTime(timestamp) {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return formatServerTime(timestamp)
 }
 
 export default function ChatWindow({ partner, onClose }) {
