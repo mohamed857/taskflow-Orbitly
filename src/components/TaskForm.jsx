@@ -125,13 +125,37 @@ export default function TaskForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setSaving(true)
     setError(null)
+
+    // Client-side validation — catch problems here before hitting the API.
+    const title = form.title.trim()
+    if (!title) {
+      setError('Please enter a title for the task.')
+      return
+    }
+    if (title.length > 200) {
+      setError('The title is too long (keep it under 200 characters).')
+      return
+    }
+    if (form.dueDate) {
+      const due = new Date(form.dueDate)
+      if (Number.isNaN(due.getTime())) {
+        setError('That due date looks invalid — pick a date and time, or clear it.')
+        return
+      }
+      // Only guard new tasks; an existing task may legitimately be overdue.
+      if (!isEdit && due.getTime() < Date.now()) {
+        setError('The due date can’t be in the past.')
+        return
+      }
+    }
+
+    setSaving(true)
     try {
       const dueDate = toApiDateTime(form.dueDate)
       const created = await onSubmit({
-        title: form.title,
-        description: form.description,
+        title,
+        description: form.description.trim(),
         dueDate,
         assigneeId: form.assigneeId ? Number(form.assigneeId) : null,
         priority: form.priority,
@@ -263,6 +287,7 @@ export default function TaskForm({
                   <input
                     id="dueDate"
                     type="datetime-local"
+                    min={!isEdit ? formatForInput(new Date().toISOString()) : undefined}
                     className="input-field w-full bg-panelAlt/40 border border-panelBorder rounded-md px-2.5 py-2 text-xs text-paper focus:outline-none focus:ring-1 focus:ring-accent/50 transition-colors"
                     value={form.dueDate}
                     onChange={(e) =>

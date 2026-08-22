@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Send, Search, X, MessageSquarePlus, Loader2, ArrowLeft } from 'lucide-react'
 import { messages as messagesApi, users as usersApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -92,6 +93,8 @@ function NewConversationPicker({ currentUserId, onPick, onClose }) {
 export default function MessagesPage() {
   const { user } = useAuth()
   const { push } = useToast()
+  const location = useLocation()
+  const startedFromNavRef = useRef(false)
   const { subscribeMessages, subscribeReads, subscribeTyping, sendTyping, isOnline } = useRealtime()
   const [partnerTyping, setPartnerTyping] = useState(false)
   const typingSentAtRef = useRef(0)
@@ -218,6 +221,16 @@ export default function MessagesPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [thread])
+
+  // Opened via the "Message" button on the roster: jump straight into that DM.
+  useEffect(() => {
+    const startWith = location.state?.startWith
+    if (startWith?.id && !startedFromNavRef.current) {
+      startedFromNavRef.current = true
+      openThread(startWith)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state])
 
   const send = async (e) => {
     e.preventDefault()

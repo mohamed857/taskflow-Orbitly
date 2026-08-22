@@ -114,6 +114,9 @@ async function request(path, opts = {}) {
   // Handle empty or non-JSON responses gracefully (e.g., 204 No Content on DELETE)
   const isJson = res.headers.get('content-type')?.includes('application/json')
   const data = isJson ? await res.json().catch(() => null) : null
+  // Some backend errors (e.g. duplicate-record conflicts) reply with a plain
+  // string body instead of JSON. Capture that text so the real reason survives.
+  const textBody = !isJson && !res.ok ? await res.text().catch(() => null) : null
 
   // Plan/usage limit reached (402) -> let the app prompt an upgrade instead of
   // a plain error toast.
@@ -135,6 +138,7 @@ async function request(path, opts = {}) {
       data?.message ||
       data?.error ||
       (fieldErrors.length ? fieldErrors.join(' · ') : null) ||
+      (textBody && textBody.trim() && textBody.trim().length < 200 ? textBody.trim() : null) ||
       (res.status === 401
         ? 'Invalid email or password. Please check and try again.'
         : res.status === 403

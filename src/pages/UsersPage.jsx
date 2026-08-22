@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare } from 'lucide-react'
 import { users as usersApi, teams as teamsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -14,6 +15,21 @@ import { displayName } from '../utils/userDisplay.js'
 export default function UsersPage() {
   const { user: actingUser, hasRole } = useAuth()
   const { push } = useToast()
+  const navigate = useNavigate()
+
+  // Open a direct message with a teammate straight from the roster.
+  const openChat = (u) =>
+    navigate('/messages', {
+      state: {
+        startWith: {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          name: u.name,
+          avatarUrl: u.avatarUrl
+        }
+      }
+    })
   
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -272,18 +288,29 @@ export default function UsersPage() {
                           <span className="text-xs text-fog/50 font-mono italic">Unassigned</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {editable ? (
-                          <button
-                            onClick={() => setTarget(u)}
-                            title="Change user role"
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
-                          >
-                            <Pencil size={13} />
-                          </button>
-                        ) : (
-                          <span className="text-fog/50 text-[11px] font-mono">{disabledReason}</span>
-                        )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => openChat(u)}
+                              title={`Message ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <MessageSquare size={13} />
+                            </button>
+                          )}
+                          {editable ? (
+                            <button
+                              onClick={() => setTarget(u)}
+                              title="Change user role"
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                          ) : (
+                            <span className="text-fog/50 text-[11px] font-mono">{disabledReason}</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

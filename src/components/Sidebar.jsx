@@ -9,7 +9,7 @@ import {
   ListTree,
   Users,
   Building2,
-  Users2,
+  Network,
   UserCircle,
   CreditCard,
   X,
@@ -42,7 +42,7 @@ const NAV_SECTIONS = [
     tkey: 'section.workspace',
     items: [
       { to: '/users', tkey: 'nav.team', icon: Users },
-      { to: '/teams', tkey: 'nav.teams', icon: Users2 },
+      { to: '/teams', tkey: 'nav.teams', icon: Network },
       { to: '/workspaces', tkey: 'nav.workspace', icon: Building2 },
       { to: '/subscription', tkey: 'nav.subscription', icon: CreditCard, roles: ['ADMIN', 'MANAGER'] },
       { to: '/profile', tkey: 'nav.profile', icon: UserCircle }
@@ -74,7 +74,7 @@ export default function Sidebar({ open, onClose }) {
         {/* Brand Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-panelBorder/40">
           <div className="flex items-center gap-2.5">
-            <Logo size={24} className="text-accent shrink-0" />
+            <Logo size={24} className="text-accent shrink-0" animated />
             <span className="font-display font-bold text-xl tracking-tight text-gradient-animated">
               Orbitly
             </span>
