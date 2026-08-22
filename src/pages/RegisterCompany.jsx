@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Eye, EyeOff, Building2, User, AtSign, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Building2, User, AtSign, Mail, Lock, ArrowRight, Loader2, Check, Star } from 'lucide-react'
 
 // Plans offered at signup. Kept in sync with the backend Plan enum.
 const PLAN_OPTIONS = [
   { key: 'FREE', name: 'Free', price: 0, meta: '5 members · 1 team' },
   { key: 'STARTER', name: 'Starter', price: 4, meta: '15 members · 3 teams' },
-  { key: 'PRO', name: 'Pro', price: 8, meta: '50 members · 15 teams' },
-  { key: 'BUSINESS', name: 'Business', price: 16, meta: 'Unlimited' }
+  { key: 'PRO', name: 'Pro', price: 8, meta: '50 members · 15 teams', popular: true },
+  { key: 'BUSINESS', name: 'Business', price: 16, meta: 'Unlimited members & teams' }
 ]
 
 // Creates a brand-new, fully isolated company. This is the ONLY way a new
@@ -169,8 +169,11 @@ export default function RegisterCompany() {
 
             {/* Plan selection */}
             <div>
-              <label className="label-eyebrow block mb-1.5">Choose a plan</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-baseline justify-between mb-2">
+                <label className="label-eyebrow">Choose a plan</label>
+                <span className="text-[10px] text-fog/70 font-mono">change anytime</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
                 {PLAN_OPTIONS.map((p) => {
                   const selected = form.plan === p.key
                   return (
@@ -178,24 +181,37 @@ export default function RegisterCompany() {
                       key={p.key}
                       type="button"
                       onClick={() => setForm({ ...form, plan: p.key })}
-                      className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+                      aria-pressed={selected}
+                      className={`relative text-left rounded-xl border p-3 transition-all duration-150 ${
                         selected
-                          ? 'border-accent bg-accent/10'
-                          : 'border-panelBorder hover:border-fog/50'
+                          ? 'border-accent bg-accent/10 ring-1 ring-accent/40 shadow-sm'
+                          : 'border-panelBorder hover:border-accent/40 hover:bg-panelAlt/30'
                       }`}
                     >
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs font-semibold text-paper">{p.name}</span>
-                        <span className="text-[11px] font-mono text-fog">
+                      {p.popular && (
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-accent/15 text-accent text-[9px] font-semibold font-mono px-1.5 py-0.5 border border-accent/25">
+                          <Star size={8} className="fill-accent" /> Popular
+                        </span>
+                      )}
+                      <span className="block text-xs font-semibold text-paper">{p.name}</span>
+                      <div className="mt-1 flex items-baseline gap-0.5">
+                        <span className="text-lg font-bold font-display text-paper leading-none">
                           {p.price === 0 ? 'Free' : `$${p.price}`}
                         </span>
+                        {p.price > 0 && (
+                          <span className="text-[9px] text-fog font-mono">/user·mo</span>
+                        )}
                       </div>
-                      <p className="text-[10px] text-fog mt-0.5">{p.meta}</p>
+                      <p className="text-[10px] text-fog mt-1.5 leading-snug">{p.meta}</p>
+                      {selected && (
+                        <span className="absolute bottom-2 right-2 inline-flex items-center justify-center h-4 w-4 rounded-full bg-accent text-white">
+                          <Check size={11} strokeWidth={3} />
+                        </span>
+                      )}
                     </button>
                   )
                 })}
               </div>
-              <p className="text-[10px] text-fog/70 mt-1.5">You can change your plan anytime.</p>
             </div>
 
             {/* Error Message Display */}

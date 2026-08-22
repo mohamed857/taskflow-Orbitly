@@ -61,9 +61,31 @@ export default function TaskDetailModal({ task, onClose }) {
   const [loadingSubtasks, setLoadingSubtasks] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [users, setUsers] = useState([])
+  const [loadingParent, setLoadingParent] = useState(false)
 
   const canManage = hasRole('ADMIN', 'MANAGER', 'TEAM_LEAD')
   const isSubtask = Boolean(viewedTask?.parentTaskId)
+
+  // Navigate up to the parent task. Works whether the subtask was opened from
+  // its parent (in which case `task` is the parent) or directly on its own —
+  // in the latter case we fetch the parent by id.
+  const goToParent = async () => {
+    const parentId = viewedTask?.parentTaskId
+    if (!parentId) return
+    if (task && task.id === parentId) {
+      setViewedTask(task)
+      return
+    }
+    setLoadingParent(true)
+    try {
+      const parent = await tasksApi.get(parentId)
+      setViewedTask(parent)
+    } catch (err) {
+      push(err.message || 'Could not open the parent task.', 'error')
+    } finally {
+      setLoadingParent(false)
+    }
+  }
 
   useEffect(() => {
     setViewedTask(task)
@@ -162,10 +184,11 @@ useEffect(() => {
             {isSubtask && (
               <button
                 type="button"
-                onClick={() => setViewedTask(task)}
-                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-mono transition-colors cursor-pointer"
+                onClick={goToParent}
+                disabled={loadingParent}
+                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-mono transition-colors cursor-pointer disabled:opacity-60"
               >
-                <ArrowLeft size={13} /> back to parent task
+                <ArrowLeft size={13} /> {loadingParent ? 'opening parent…' : 'back to parent task'}
               </button>
             )}
 
