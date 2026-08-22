@@ -171,7 +171,10 @@ export const auth = {
 export const users = {
   // تجلب المستخدمين المتاحين طبقاً لـ Role المستخدم الحالية تلقائياً من الباك إند
   listInWorkspace: () => request('/api/users/workspace'),
-  
+  // Full workspace directory — used for messaging so a DM can be started with
+  // anyone (admins, managers, other teams), not just your own team roster.
+  directory: () => request('/api/users/workspace/directory'),
+
   changeRole: (id, role) => request(`/api/users/${id}/role`, { method: 'PATCH', body: { role } }),
   changePassword: (currentPassword, newPassword) =>
     request('/api/users/me/password', { method: 'PATCH', body: { currentPassword, newPassword } }),

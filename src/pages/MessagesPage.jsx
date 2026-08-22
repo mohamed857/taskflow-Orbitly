@@ -26,7 +26,8 @@ function NewConversationPicker({ currentUserId, onPick, onClose }) {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    usersApi.listInWorkspace().then(setTeam).catch(() => {})
+    // Directory (workspace-wide), so a Team Lead can DM anyone — not just their team.
+    usersApi.directory().then(setTeam).catch(() => {})
   }, [])
 
   const filtered = team
