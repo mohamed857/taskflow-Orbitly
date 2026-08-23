@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare } from 'lucide-react'
+import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound } from 'lucide-react'
 import { users as usersApi, teams as teamsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -9,6 +9,7 @@ import RoleBadge from '../components/RoleBadge.jsx'
 import StatCard from '../components/StatCard.jsx'
 import ChangeRoleModal from '../components/ChangeRoleModal.jsx'
 import CreateUserModal from '../components/CreateUserModal.jsx'
+import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
 import { canChangeRole, allowedTargetRoles, roleScopeHint } from '../utils/roles.js'
 import { displayName } from '../utils/userDisplay.js'
 
@@ -36,6 +37,7 @@ export default function UsersPage() {
   const [query, setQuery] = useState('')
   const [target, setTarget] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [resetTarget, setResetTarget] = useState(null)
   const [teamList, setTeamList] = useState([])
   const [assigningId, setAssigningId] = useState(null)
 
@@ -299,6 +301,15 @@ export default function UsersPage() {
                               <MessageSquare size={13} />
                             </button>
                           )}
+                          {canCreateUsers && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => setResetTarget(u)}
+                              title={`Reset password for ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <KeyRound size={13} />
+                            </button>
+                          )}
                           {editable ? (
                             <button
                               onClick={() => setTarget(u)}
@@ -331,6 +342,14 @@ export default function UsersPage() {
       />
 
       <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} teams={teamList} />
+
+      {resetTarget && (
+        <ResetPasswordModal
+          target={resetTarget}
+          resetFn={(id, pw) => usersApi.resetPassword(id, pw)}
+          onClose={() => setResetTarget(null)}
+        />
+      )}
     </div>
   )
 }

@@ -184,6 +184,9 @@ export const users = {
   directory: () => request('/api/users/workspace/directory'),
 
   changeRole: (id, role) => request(`/api/users/${id}/role`, { method: 'PATCH', body: { role } }),
+  // Admin/Manager sets a new password for a member of their own workspace.
+  resetPassword: (id, newPassword) =>
+    request(`/api/users/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
   changePassword: (currentPassword, newPassword) =>
     request('/api/users/me/password', { method: 'PATCH', body: { currentPassword, newPassword } }),
   create: (payload) => request('/api/users', { method: 'POST', body: payload }),
