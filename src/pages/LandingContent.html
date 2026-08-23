@@ -34,6 +34,11 @@
     background-image:radial-gradient(60% 40% at 92% -6%, rgba(246,169,59,.14), transparent 60%),
                      radial-gradient(48% 40% at -6% 12%, rgba(47,93,242,.08), transparent 60%);
   }
+  body.en{direction:ltr; text-align:left}
+  /* bilingual visibility — Arabic is default, English shows when <body class="en"> */
+  .lang-en{display:none}
+  body.en .lang-ar{display:none}
+  body.en .lang-en{display:inline}
   a{color:inherit; text-decoration:none}
   h1,h2,h3{font-family:var(--f-head); margin:0; line-height:1.14; font-weight:800; letter-spacing:-.01em; text-wrap:balance}
   p{margin:0}
@@ -52,6 +57,10 @@
   .btn-plain:hover{color:var(--blue-ink)}
   .btn-outline{background:var(--card); color:var(--ink); border-color:var(--ink); box-shadow:4px 4px 0 var(--gold)}
   .btn-outline:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--gold)}
+  .lang-btn{font-family:var(--f-head); font-weight:800; font-size:.82rem; letter-spacing:.03em; border:2px solid var(--ink);
+    background:var(--card); color:var(--ink); border-radius:11px; padding:.5rem .8rem; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .12s ease, box-shadow .18s ease}
+  .lang-btn:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink)}
   :focus-visible{outline:3px solid var(--blue); outline-offset:3px; border-radius:8px}
 
   /* highlighter behind a word */
@@ -87,7 +96,7 @@
   .hero-cta{display:flex; flex-wrap:wrap; align-items:center; gap:1rem; margin-top:1.9rem}
   .note-hand{font-family:var(--f-hand); font-size:1.35rem; color:var(--coral); transform:rotate(-4deg)}
   .assur{display:flex; gap:1.3rem; flex-wrap:wrap; margin-top:1.7rem; color:var(--ink-2); font-size:.9rem; font-family:var(--f-head); font-weight:600}
-  .assur span{display:inline-flex; align-items:center; gap:.45rem}
+  .assur span.item{display:inline-flex; align-items:center; gap:.45rem}
   .assur svg{color:var(--green)}
 
   /* product peek card (taped, tilted) */
@@ -233,15 +242,16 @@
       Orbitly
     </a>
     <nav class="nav-links" id="navlinks">
-      <a href="#features">المميزات</a>
-      <a href="#how">إزاي بتبدأ</a>
-      <a href="#pricing">الأسعار</a>
-      <a href="#faq">أسئلة</a>
+      <a href="#features"><span class="lang-ar">المميزات</span><span class="lang-en">Features</span></a>
+      <a href="#how"><span class="lang-ar">إزاي بتبدأ</span><span class="lang-en">How it works</span></a>
+      <a href="#pricing"><span class="lang-ar">الأسعار</span><span class="lang-en">Pricing</span></a>
+      <a href="#faq"><span class="lang-ar">أسئلة</span><span class="lang-en">FAQ</span></a>
     </nav>
     <div class="nav-actions">
-      <a href="/login" target="_top" class="btn btn-plain">تسجيل الدخول</a>
-      <a href="/register-company" target="_top" class="btn btn-primary">جرّبه مجاناً</a>
-      <button class="menu-btn" id="menu" aria-label="القائمة"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <button class="lang-btn" id="lang" type="button" aria-label="Switch language"><span class="lang-ar">EN</span><span class="lang-en">ع</span></button>
+      <a href="/login" target="_top" class="btn btn-plain"><span class="lang-ar">تسجيل الدخول</span><span class="lang-en">Log in</span></a>
+      <a href="/register-company" target="_top" class="btn btn-primary"><span class="lang-ar">جرّبه مجاناً</span><span class="lang-en">Try it free</span></a>
+      <button class="menu-btn" id="menu" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     </div>
   </div>
 </header>
@@ -252,19 +262,27 @@
 <div class="hero">
   <div class="wrap hero-grid">
     <div class="reveal">
-      <span class="eyebrow"><span class="sq"></span> إدارة مهام لفريقك — من غير صداع</span>
-      <h1>شغل فريقك كله في مكان واحد
-        <span class="hl">مرتّب<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><path d="M6 26 C 40 12, 120 12, 194 22 C 150 30, 60 32, 6 26 Z" fill="currentColor" opacity=".55"/></svg></span>
-        وواضح.</h1>
-      <p class="lead">بلاش شيتات ومجموعات واتساب متفرقة. Orbitly بيجمع المهام، الفِرق، التقويم والمحادثات في لوحة واحدة بسيطة — تعرف منها مين بيعمل إيه، وإيه المتأخر، من غير لخبطة.</p>
+      <span class="eyebrow"><span class="sq"></span> <span class="lang-ar">إدارة مهام لفريقك — من غير صداع</span><span class="lang-en">Task management for your team — headache-free</span></span>
+      <h1>
+        <span class="lang-ar">شغل فريقك كله في مكان واحد
+          <span class="hl">مرتّب<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><path d="M6 26 C 40 12, 120 12, 194 22 C 150 30, 60 32, 6 26 Z" fill="currentColor" opacity=".55"/></svg></span>
+          وواضح.</span>
+        <span class="lang-en">Your team's work, all in one
+          <span class="hl">place<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><path d="M6 26 C 40 12, 120 12, 194 22 C 150 30, 60 32, 6 26 Z" fill="currentColor" opacity=".55"/></svg></span>
+          — organized.</span>
+      </h1>
+      <p class="lead">
+        <span class="lang-ar">بلاش شيتات ومجموعات واتساب متفرقة. Orbitly بيجمع المهام، الفِرق، التقويم والمحادثات في لوحة واحدة بسيطة — تعرف منها مين بيعمل إيه، وإيه المتأخر، من غير لخبطة.</span>
+        <span class="lang-en">No more scattered spreadsheets and WhatsApp groups. Orbitly brings tasks, teams, calendar and chat into one simple board — so you know who's doing what and what's overdue, without the mess.</span>
+      </p>
       <div class="hero-cta">
-        <a href="/register-company" target="_top" class="btn btn-primary">ابدأ مجاناً</a>
-        <span class="note-hand">مجاني تماماً للبداية ✦</span>
+        <a href="/register-company" target="_top" class="btn btn-primary"><span class="lang-ar">ابدأ مجاناً</span><span class="lang-en">Start free</span></a>
+        <span class="note-hand"><span class="lang-ar">مجاني تماماً للبداية ✦</span><span class="lang-en">Totally free to start ✦</span></span>
       </div>
       <div class="assur">
-        <span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> من غير بطاقة</span>
-        <span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> جاهز في دقيقة</span>
-        <span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> عربي بالكامل</span>
+        <span class="item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">من غير بطاقة</span><span class="lang-en">No card needed</span></span>
+        <span class="item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">جاهز في دقيقة</span><span class="lang-en">Ready in a minute</span></span>
+        <span class="item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">عربي بالكامل</span><span class="lang-en">Arabic &amp; English</span></span>
       </div>
     </div>
 
@@ -272,11 +290,11 @@
       <svg class="doodle-planet" viewBox="0 0 64 64" fill="none" aria-hidden="true"><ellipse cx="32" cy="32" rx="26" ry="11" transform="rotate(-24 32 32)" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="12" fill="currentColor"/></svg>
       <div class="peek">
         <span class="tape t1"></span><span class="tape t2"></span>
-        <h4>لوحة الفريق <span class="dot3"><i></i><i></i><i></i></span></h4>
-        <div class="trow"><span class="bar" style="background:var(--coral)"></span><span class="tt">تصميم صفحة الهبوط الجديدة</span><span class="ava" style="background:var(--blue)">م</span><span class="chip c-coral">متأخر</span></div>
-        <div class="trow"><span class="bar" style="background:var(--blue)"></span><span class="tt">مراجعة عرض العميل</span><span class="ava" style="background:var(--green)">ك</span><span class="chip c-blue">جاري</span></div>
-        <div class="trow"><span class="bar" style="background:var(--gold)"></span><span class="tt">تجهيز خطة الشهر</span><span class="ava" style="background:var(--plum)">س</span><span class="chip c-gold">في الانتظار</span></div>
-        <div class="trow"><span class="bar" style="background:var(--green)"></span><span class="tt">إطلاق النسخة 2.1</span><span class="ava" style="background:var(--coral)">ع</span><span class="chip c-green">تم ✓</span></div>
+        <h4><span class="lang-ar">لوحة الفريق</span><span class="lang-en">Team board</span> <span class="dot3"><i></i><i></i><i></i></span></h4>
+        <div class="trow"><span class="bar" style="background:var(--coral)"></span><span class="tt"><span class="lang-ar">تصميم صفحة الهبوط الجديدة</span><span class="lang-en">Design the new landing page</span></span><span class="ava" style="background:var(--blue)"><span class="lang-ar">م</span><span class="lang-en">M</span></span><span class="chip c-coral"><span class="lang-ar">متأخر</span><span class="lang-en">Overdue</span></span></div>
+        <div class="trow"><span class="bar" style="background:var(--blue)"></span><span class="tt"><span class="lang-ar">مراجعة عرض العميل</span><span class="lang-en">Review client proposal</span></span><span class="ava" style="background:var(--green)"><span class="lang-ar">ك</span><span class="lang-en">K</span></span><span class="chip c-blue"><span class="lang-ar">جاري</span><span class="lang-en">In progress</span></span></div>
+        <div class="trow"><span class="bar" style="background:var(--gold)"></span><span class="tt"><span class="lang-ar">تجهيز خطة الشهر</span><span class="lang-en">Prep this month's plan</span></span><span class="ava" style="background:var(--plum)"><span class="lang-ar">س</span><span class="lang-en">S</span></span><span class="chip c-gold"><span class="lang-ar">في الانتظار</span><span class="lang-en">To do</span></span></div>
+        <div class="trow"><span class="bar" style="background:var(--green)"></span><span class="tt"><span class="lang-ar">إطلاق النسخة 2.1</span><span class="lang-en">Ship v2.1</span></span><span class="ava" style="background:var(--coral)"><span class="lang-ar">ع</span><span class="lang-en">A</span></span><span class="chip c-green"><span class="lang-ar">تم ✓</span><span class="lang-en">Done ✓</span></span></div>
       </div>
       <svg class="doodle-arrow" viewBox="0 0 120 60" fill="none" aria-hidden="true"><path d="M4 8 C 30 2, 44 40, 96 44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M84 34 L98 46 L82 52" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
@@ -286,8 +304,12 @@
 <!-- manifesto -->
 <div class="manifesto">
   <div class="wrap reveal">
-    <p>شغل الفريق مش لازم يبقى <span class="wavy">فوضى<svg viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 6 Q 15 0, 30 6 T 60 6 T 90 6 T 118 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>.
-    <span class="m2">إحنا عملنا Orbitly عشان كل حاجة تبقى في مكانها — وإنت تركّز على الشغل نفسه، مش على تنظيمه.</span></p>
+    <p>
+      <span class="lang-ar">شغل الفريق مش لازم يبقى <span class="wavy">فوضى<svg viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 6 Q 15 0, 30 6 T 60 6 T 90 6 T 118 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>.
+      <span class="m2">إحنا عملنا Orbitly عشان كل حاجة تبقى في مكانها — وإنت تركّز على الشغل نفسه، مش على تنظيمه.</span></span>
+      <span class="lang-en">Team work doesn't have to be <span class="wavy">chaos<svg viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 6 Q 15 0, 30 6 T 60 6 T 90 6 T 118 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>.
+      <span class="m2">We built Orbitly so everything has its place — and you focus on the work itself, not on organizing it.</span></span>
+    </p>
   </div>
 </div>
 
@@ -295,27 +317,27 @@
 <section id="features">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow"><span class="sq"></span> كل اللي محتاجه</span>
-      <h2>أدوات بسيطة، بتشتغل مع بعض</h2>
-      <p>مش مجرد قائمة مهام — منظومة كاملة تدير بيها شغل فريقك من الأول للآخر.</p>
+      <span class="eyebrow"><span class="sq"></span> <span class="lang-ar">كل اللي محتاجه</span><span class="lang-en">Everything you need</span></span>
+      <h2><span class="lang-ar">أدوات بسيطة، بتشتغل مع بعض</span><span class="lang-en">Simple tools that work together</span></h2>
+      <p><span class="lang-ar">مش مجرد قائمة مهام — منظومة كاملة تدير بيها شغل فريقك من الأول للآخر.</span><span class="lang-en">Not just a to-do list — a complete system to run your team's work end to end.</span></p>
     </div>
     <div class="bento">
       <div class="b b1 reveal">
-        <h3>لوحة بتتسحب بإيدك</h3>
-        <p>حرّك المهام بين الحالات، وحدّد الأولوية والمسؤول والميعاد — كل حاجة قدامك بوضوح.</p>
+        <h3><span class="lang-ar">لوحة بتتسحب بإيدك</span><span class="lang-en">A board you drag by hand</span></h3>
+        <p><span class="lang-ar">حرّك المهام بين الحالات، وحدّد الأولوية والمسؤول والميعاد — كل حاجة قدامك بوضوح.</span><span class="lang-en">Move tasks between states and set priority, owner and due date — everything clear in front of you.</span></p>
         <div class="mini-board" aria-hidden="true">
-          <div class="mcol"><div class="h">في الانتظار</div><div class="mcard"><i style="background:var(--gold)"></i> بحث المنافسين</div><div class="mcard"><i style="background:var(--blue)"></i> كتابة المحتوى</div></div>
-          <div class="mcol"><div class="h">جاري</div><div class="mcard"><i style="background:var(--coral)"></i> تصميم الواجهة</div><div class="mcard"><i style="background:var(--plum)"></i> مراجعة الكود</div></div>
-          <div class="mcol"><div class="h">تم</div><div class="mcard"><i style="background:var(--green)"></i> إعداد الحساب</div></div>
+          <div class="mcol"><div class="h"><span class="lang-ar">في الانتظار</span><span class="lang-en">To do</span></div><div class="mcard"><i style="background:var(--gold)"></i> <span class="lang-ar">بحث المنافسين</span><span class="lang-en">Competitor research</span></div><div class="mcard"><i style="background:var(--blue)"></i> <span class="lang-ar">كتابة المحتوى</span><span class="lang-en">Write content</span></div></div>
+          <div class="mcol"><div class="h"><span class="lang-ar">جاري</span><span class="lang-en">In progress</span></div><div class="mcard"><i style="background:var(--coral)"></i> <span class="lang-ar">تصميم الواجهة</span><span class="lang-en">UI design</span></div><div class="mcard"><i style="background:var(--plum)"></i> <span class="lang-ar">مراجعة الكود</span><span class="lang-en">Code review</span></div></div>
+          <div class="mcol"><div class="h"><span class="lang-ar">تم</span><span class="lang-en">Done</span></div><div class="mcard"><i style="background:var(--green)"></i> <span class="lang-ar">إعداد الحساب</span><span class="lang-en">Account setup</span></div></div>
         </div>
       </div>
 
       <div class="b b2 reveal" style="transition-delay:.05s">
-        <span class="tagword" style="inset-block-start:14px; inset-inline-start:16px">فريقك كله!</span>
-        <h3 style="margin-top:26px">فِرق وأدوار</h3>
-        <p>Admin وManager وTeam Lead — وكل شركة في مساحتها.</p>
+        <span class="tagword" style="inset-block-start:14px; inset-inline-start:16px"><span class="lang-ar">فريقك كله!</span><span class="lang-en">Your whole team!</span></span>
+        <h3 style="margin-top:26px"><span class="lang-ar">فِرق وأدوار</span><span class="lang-en">Teams &amp; roles</span></h3>
+        <p><span class="lang-ar">Admin وManager وTeam Lead — وكل شركة في مساحتها.</span><span class="lang-en">Admin, Manager, Team Lead — and every company in its own space.</span></p>
         <div class="stack" aria-hidden="true">
-          <span class="ava" style="background:var(--blue)">ع</span><span class="ava" style="background:var(--green)">م</span><span class="ava" style="background:var(--gold)">ك</span><span class="ava" style="background:var(--coral)">س</span><span class="ava" style="background:var(--plum)">+٩</span>
+          <span class="ava" style="background:var(--blue)"><span class="lang-ar">ع</span><span class="lang-en">A</span></span><span class="ava" style="background:var(--green)"><span class="lang-ar">م</span><span class="lang-en">M</span></span><span class="ava" style="background:var(--gold)"><span class="lang-ar">ك</span><span class="lang-en">K</span></span><span class="ava" style="background:var(--coral)"><span class="lang-ar">س</span><span class="lang-en">S</span></span><span class="ava" style="background:var(--plum)"><span class="lang-ar">+٩</span><span class="lang-en">+9</span></span>
         </div>
         <div class="rolechips">
           <span class="chip c-blue">Admin</span><span class="chip c-green">Manager</span><span class="chip c-gold">Team Lead</span>
@@ -323,25 +345,25 @@
       </div>
 
       <div class="b b3 reveal" style="transition-delay:.1s">
-        <h3>محادثات جوّه الشغل</h3>
-        <p>كلّم أي حد في فريقك من غير ما تسيب التطبيق.</p>
+        <h3><span class="lang-ar">محادثات جوّه الشغل</span><span class="lang-en">Chat inside your work</span></h3>
+        <p><span class="lang-ar">كلّم أي حد في فريقك من غير ما تسيب التطبيق.</span><span class="lang-en">Message anyone on your team without leaving the app.</span></p>
         <div class="chatmini" aria-hidden="true">
-          <span class="bub them">خلّصت التصميم ✅</span>
-          <span class="bub me">تحفة! ننزّله بكرة 🚀</span>
+          <span class="bub them"><span class="lang-ar">خلّصت التصميم ✅</span><span class="lang-en">Finished the design ✅</span></span>
+          <span class="bub me"><span class="lang-ar">تحفة! ننزّله بكرة 🚀</span><span class="lang-en">Awesome! Let's ship it tomorrow 🚀</span></span>
         </div>
       </div>
 
       <div class="b b4 reveal" style="transition-delay:.05s">
-        <h3>تقويم يوضّح أسبوعك</h3>
-        <p>كل المواعيد النهائية قدامك — تعرف الضغط رايح فين قبل ما يوصل.</p>
+        <h3><span class="lang-ar">تقويم يوضّح أسبوعك</span><span class="lang-en">A calendar that maps your week</span></h3>
+        <p><span class="lang-ar">كل المواعيد النهائية قدامك — تعرف الضغط رايح فين قبل ما يوصل.</span><span class="lang-en">Every deadline in view — see where the pressure's heading before it lands.</span></p>
         <div class="cal-strip" aria-hidden="true">
-          <div class="cday"><div class="n">١٢</div><div class="dt"></div></div>
-          <div class="cday ok"><div class="n">١٣</div><div class="dt"></div></div>
-          <div class="cday"><div class="n">١٤</div><div class="dt"></div></div>
-          <div class="cday hot"><div class="n">١٥</div><div class="dt"></div></div>
-          <div class="cday on"><div class="n">١٦</div><div class="dt"></div></div>
-          <div class="cday"><div class="n">١٧</div><div class="dt"></div></div>
-          <div class="cday ok"><div class="n">١٨</div><div class="dt"></div></div>
+          <div class="cday"><div class="n"><span class="lang-ar">١٢</span><span class="lang-en">12</span></div><div class="dt"></div></div>
+          <div class="cday ok"><div class="n"><span class="lang-ar">١٣</span><span class="lang-en">13</span></div><div class="dt"></div></div>
+          <div class="cday"><div class="n"><span class="lang-ar">١٤</span><span class="lang-en">14</span></div><div class="dt"></div></div>
+          <div class="cday hot"><div class="n"><span class="lang-ar">١٥</span><span class="lang-en">15</span></div><div class="dt"></div></div>
+          <div class="cday on"><div class="n"><span class="lang-ar">١٦</span><span class="lang-en">16</span></div><div class="dt"></div></div>
+          <div class="cday"><div class="n"><span class="lang-ar">١٧</span><span class="lang-en">17</span></div><div class="dt"></div></div>
+          <div class="cday ok"><div class="n"><span class="lang-ar">١٨</span><span class="lang-en">18</span></div><div class="dt"></div></div>
         </div>
       </div>
     </div>
@@ -352,27 +374,27 @@
 <section id="how">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow"><span class="sq"></span> بسيطة جداً</span>
-      <h2>٣ خطوات وتكون شغّال</h2>
-      <p>من غير تركيب، ولا سيرفر، ولا تعقيد.</p>
+      <span class="eyebrow"><span class="sq"></span> <span class="lang-ar">بسيطة جداً</span><span class="lang-en">Dead simple</span></span>
+      <h2><span class="lang-ar">٣ خطوات وتكون شغّال</span><span class="lang-en">3 steps and you're running</span></h2>
+      <p><span class="lang-ar">من غير تركيب، ولا سيرفر، ولا تعقيد.</span><span class="lang-en">No install, no server, no complexity.</span></p>
     </div>
     <div class="steps">
       <div class="st reveal">
         <div class="bignum">1</div>
-        <h3>اعمل حساب شركتك</h3>
-        <p>سجّل في دقيقة واختار باقتك — تقدر تبدأ مجاناً بالكامل.</p>
+        <h3><span class="lang-ar">اعمل حساب شركتك</span><span class="lang-en">Create your company account</span></h3>
+        <p><span class="lang-ar">سجّل في دقيقة واختار باقتك — تقدر تبدأ مجاناً بالكامل.</span><span class="lang-en">Sign up in a minute and pick your plan — you can start completely free.</span></p>
         <svg class="conn" viewBox="0 0 40 20" fill="none" aria-hidden="true"><path d="M38 10 C 24 2, 16 18, 2 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 6"/></svg>
       </div>
       <div class="st reveal" style="transition-delay:.06s">
         <div class="bignum">2</div>
-        <h3>ضيف فريقك</h3>
-        <p>ادعِ زمايلك، اعمل الفِرق، ووزّع المهام على كل واحد.</p>
+        <h3><span class="lang-ar">ضيف فريقك</span><span class="lang-en">Add your team</span></h3>
+        <p><span class="lang-ar">ادعِ زمايلك، اعمل الفِرق، ووزّع المهام على كل واحد.</span><span class="lang-en">Invite your colleagues, create teams, and assign tasks to each person.</span></p>
         <svg class="conn" viewBox="0 0 40 20" fill="none" aria-hidden="true"><path d="M38 10 C 24 2, 16 18, 2 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 6"/></svg>
       </div>
       <div class="st reveal" style="transition-delay:.12s">
         <div class="bignum">3</div>
-        <h3>تابع كل حاجة</h3>
-        <p>شوف التقدّم لحظة بلحظة — المتأخر والجاي قبل ما يفاجئك.</p>
+        <h3><span class="lang-ar">تابع كل حاجة</span><span class="lang-en">Track everything</span></h3>
+        <p><span class="lang-ar">شوف التقدّم لحظة بلحظة — المتأخر والجاي قبل ما يفاجئك.</span><span class="lang-en">See progress in real time — overdue and upcoming before it surprises you.</span></p>
       </div>
     </div>
   </div>
@@ -382,58 +404,58 @@
 <section id="pricing">
   <div class="wrap">
     <div class="sec-head reveal" style="max-width:620px; margin-inline:auto; text-align:center">
-      <span class="eyebrow" style="justify-content:center"><span class="sq"></span> أسعار واضحة</span>
-      <h2>ابدأ مجاناً، وادفع وقت ما تكبر</h2>
-      <p>السعر لكل عضو في الشهر — وأرخص من المنافسين.</p>
+      <span class="eyebrow" style="justify-content:center"><span class="sq"></span> <span class="lang-ar">أسعار واضحة</span><span class="lang-en">Clear pricing</span></span>
+      <h2><span class="lang-ar">ابدأ مجاناً، وادفع وقت ما تكبر</span><span class="lang-en">Start free, pay as you grow</span></h2>
+      <p><span class="lang-ar">السعر لكل عضو في الشهر — وأرخص من المنافسين.</span><span class="lang-en">Price per member per month — and cheaper than the competition.</span></p>
     </div>
     <div class="pgrid">
       <div class="plan reveal">
         <div class="name">Free</div>
         <div class="price"><span class="amt">$0</span></div>
-        <div class="meta">للبداية والفرق الصغيرة.</div>
+        <div class="meta"><span class="lang-ar">للبداية والفرق الصغيرة.</span><span class="lang-en">For starters and small teams.</span></div>
         <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> ٥ أعضاء</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> فريق واحد</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> كل الأساسيات</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">٥ أعضاء</span><span class="lang-en">5 members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">فريق واحد</span><span class="lang-en">1 team</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">كل الأساسيات</span><span class="lang-en">All the essentials</span></li>
         </ul>
-        <a href="/register-company" target="_top" class="btn btn-outline">ابدأ مجاناً</a>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">ابدأ مجاناً</span><span class="lang-en">Start free</span></a>
       </div>
       <div class="plan reveal" style="transition-delay:.05s">
         <div class="name">Starter</div>
-        <div class="price"><span class="amt">$4</span><span class="per">/عضو/شهر</span></div>
-        <div class="meta">للفرق اللي بتكبر.</div>
+        <div class="price"><span class="amt">$4</span><span class="per"><span class="lang-ar">/عضو/شهر</span><span class="lang-en">/member/mo</span></span></div>
+        <div class="meta"><span class="lang-ar">للفرق اللي بتكبر.</span><span class="lang-en">For growing teams.</span></div>
         <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> ١٥ عضو</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> ٣ فِرق</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> محادثات وتحليلات</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">١٥ عضو</span><span class="lang-en">15 members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">٣ فِرق</span><span class="lang-en">3 teams</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">محادثات وتحليلات</span><span class="lang-en">Chat &amp; analytics</span></li>
         </ul>
-        <a href="/register-company" target="_top" class="btn btn-outline">اختار Starter</a>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">اختار Starter</span><span class="lang-en">Choose Starter</span></a>
       </div>
       <div class="plan pop reveal" style="transition-delay:.1s">
-        <span class="tag">الأكثر طلباً ✦</span>
+        <span class="tag"><span class="lang-ar">الأكثر طلباً ✦</span><span class="lang-en">Most popular ✦</span></span>
         <div class="name">Pro</div>
-        <div class="price"><span class="amt">$8</span><span class="per">/عضو/شهر</span></div>
-        <div class="meta">الاختيار المثالي للشركات النامية.</div>
+        <div class="price"><span class="amt">$8</span><span class="per"><span class="lang-ar">/عضو/شهر</span><span class="lang-en">/member/mo</span></span></div>
+        <div class="meta"><span class="lang-ar">الاختيار المثالي للشركات النامية.</span><span class="lang-en">The ideal pick for growing companies.</span></div>
         <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> ٥٠ عضو</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> ١٥ فريق</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> أولوية في الدعم</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">٥٠ عضو</span><span class="lang-en">50 members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">١٥ فريق</span><span class="lang-en">15 teams</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">أولوية في الدعم</span><span class="lang-en">Priority support</span></li>
         </ul>
-        <a href="/register-company" target="_top" class="btn btn-outline">اختار Pro</a>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">اختار Pro</span><span class="lang-en">Choose Pro</span></a>
       </div>
       <div class="plan reveal" style="transition-delay:.15s">
         <div class="name">Business</div>
-        <div class="price"><span class="amt">$16</span><span class="per">/عضو/شهر</span></div>
-        <div class="meta">للمؤسسات بلا حدود.</div>
+        <div class="price"><span class="amt">$16</span><span class="per"><span class="lang-ar">/عضو/شهر</span><span class="lang-en">/member/mo</span></span></div>
+        <div class="meta"><span class="lang-ar">للمؤسسات بلا حدود.</span><span class="lang-en">For organizations, no limits.</span></div>
         <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> أعضاء بلا حدود</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> فِرق بلا حدود</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> كل مميزات Pro</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">أعضاء بلا حدود</span><span class="lang-en">Unlimited members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">فِرق بلا حدود</span><span class="lang-en">Unlimited teams</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">كل مميزات Pro</span><span class="lang-en">Everything in Pro</span></li>
         </ul>
-        <a href="/register-company" target="_top" class="btn btn-outline">اختار Business</a>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">اختار Business</span><span class="lang-en">Choose Business</span></a>
       </div>
     </div>
-    <p class="price-note">كل الباقات المدفوعة <span class="hl">أرخص</span> من الباقة الأساسية عند أغلب المنافسين — وتقدر تغيّر باقتك في أي وقت.</p>
+    <p class="price-note"><span class="lang-ar">كل الباقات المدفوعة <span class="hl">أرخص</span> من الباقة الأساسية عند أغلب المنافسين — وتقدر تغيّر باقتك في أي وقت.</span><span class="lang-en">Every paid plan is <span class="hl">cheaper</span> than most competitors' base plan — and you can switch anytime.</span></p>
   </div>
 </section>
 
@@ -442,9 +464,9 @@
   <div class="wrap founder-in reveal">
     <div class="stamp">K</div>
     <div>
-      <blockquote>“عملنا Orbitly عشان إحنا بنفسنا اتعبنا من الشغل المتفرّق بين الشيتات والشاتات. حبينا نعمل حاجة بسيطة، عربية، وتريّح فريقك فعلاً — مش مجرد أداة تانية.”</blockquote>
-      <div class="sig">فريق Kvant</div>
-      <div class="who">الفريق اللي بيبني Orbitly ✦ من مصر</div>
+      <blockquote><span class="lang-ar">“عملنا Orbitly عشان إحنا بنفسنا اتعبنا من الشغل المتفرّق بين الشيتات والشاتات. حبينا نعمل حاجة بسيطة، عربية، وتريّح فريقك فعلاً — مش مجرد أداة تانية.”</span><span class="lang-en">"We built Orbitly because we ourselves got tired of work scattered across sheets and chats. We wanted something simple, Arabic-first, that actually gives your team relief — not just another tool."</span></blockquote>
+      <div class="sig"><span class="lang-ar">فريق Kvant</span><span class="lang-en">Team Kvant</span></div>
+      <div class="who"><span class="lang-ar">الفريق اللي بيبني Orbitly ✦ من مصر</span><span class="lang-en">The team building Orbitly ✦ from Egypt</span></div>
     </div>
   </div>
 </section>
@@ -453,15 +475,15 @@
 <section id="faq">
   <div class="wrap">
     <div class="sec-head reveal" style="max-width:620px; margin-inline:auto; text-align:center">
-      <span class="eyebrow" style="justify-content:center"><span class="sq"></span> أسئلة شائعة</span>
-      <h2>يمكن سؤالك هنا</h2>
+      <span class="eyebrow" style="justify-content:center"><span class="sq"></span> <span class="lang-ar">أسئلة شائعة</span><span class="lang-en">FAQ</span></span>
+      <h2><span class="lang-ar">يمكن سؤالك هنا</span><span class="lang-en">Maybe your question's here</span></h2>
     </div>
     <div class="faq reveal">
-      <details open><summary>فيه باقة مجانية فعلاً؟ <span class="x">+</span></summary><p>آه، باقة Free مجانية بالكامل ومن غير بطاقة، لحد ٥ أعضاء وفريق واحد بكل الأساسيات.</p></details>
-      <details><summary>بياناتي مفصولة عن باقي الشركات؟ <span class="x">+</span></summary><p>طبعاً — كل شركة ليها مساحة عمل مستقلة تماماً، محدش يشوف بيانات حد تاني.</p></details>
-      <details><summary>بيشتغل على الموبايل؟ <span class="x">+</span></summary><p>آه، متجاوب بالكامل على أي متصفح، موبايل أو لابتوب، من غير ما تنزّل حاجة.</p></details>
-      <details><summary>محتاج تركيب أو خبرة تقنية؟ <span class="x">+</span></summary><p>لأ خالص — تعمل حساب وتبدأ على طول، بأبسط شكل ممكن.</p></details>
-      <details><summary>أقدر أغيّر باقتي بعدين؟ <span class="x">+</span></summary><p>آه، ترقّي أو تنزّل في أي وقت حسب حجم فريقك.</p></details>
+      <details open><summary><span><span class="lang-ar">فيه باقة مجانية فعلاً؟</span><span class="lang-en">Is there really a free plan?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">آه، باقة Free مجانية بالكامل ومن غير بطاقة، لحد ٥ أعضاء وفريق واحد بكل الأساسيات.</span><span class="lang-en">Yes — the Free plan is completely free, no card, up to 5 members and one team with all the essentials.</span></p></details>
+      <details><summary><span><span class="lang-ar">بياناتي مفصولة عن باقي الشركات؟</span><span class="lang-en">Is my data separate from other companies?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">طبعاً — كل شركة ليها مساحة عمل مستقلة تماماً، محدش يشوف بيانات حد تاني.</span><span class="lang-en">Absolutely — each company gets a fully isolated workspace; no one sees anyone else's data.</span></p></details>
+      <details><summary><span><span class="lang-ar">بيشتغل على الموبايل؟</span><span class="lang-en">Does it work on mobile?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">آه، متجاوب بالكامل على أي متصفح، موبايل أو لابتوب، من غير ما تنزّل حاجة.</span><span class="lang-en">Yes, fully responsive on any browser, phone or laptop, nothing to install.</span></p></details>
+      <details><summary><span><span class="lang-ar">محتاج تركيب أو خبرة تقنية؟</span><span class="lang-en">Do I need setup or technical skills?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">لأ خالص — تعمل حساب وتبدأ على طول، بأبسط شكل ممكن.</span><span class="lang-en">Not at all — create an account and start right away, as simple as it gets.</span></p></details>
+      <details><summary><span><span class="lang-ar">أقدر أغيّر باقتي بعدين؟</span><span class="lang-en">Can I change my plan later?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">آه، ترقّي أو تنزّل في أي وقت حسب حجم فريقك.</span><span class="lang-en">Yes, upgrade or downgrade anytime based on your team size.</span></p></details>
     </div>
   </div>
 </section>
@@ -471,9 +493,9 @@
   <div class="wrap">
     <div class="final reveal">
       <svg class="planet-bg" viewBox="0 0 64 64" fill="none" aria-hidden="true"><ellipse cx="32" cy="32" rx="26" ry="11" transform="rotate(-24 32 32)" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="12" fill="currentColor"/></svg>
-      <h2>يلّا نظّم شغل فريقك</h2>
-      <p>ابدأ مجاناً النهاردة — في دقيقة، ومن غير بطاقة. وخلّي كل مهمة في مكانها.</p>
-      <a href="/register-company" target="_top" class="btn btn-outline">ابدأ مجاناً الآن</a>
+      <h2><span class="lang-ar">يلّا نظّم شغل فريقك</span><span class="lang-en">Let's organize your team's work</span></h2>
+      <p><span class="lang-ar">ابدأ مجاناً النهاردة — في دقيقة، ومن غير بطاقة. وخلّي كل مهمة في مكانها.</span><span class="lang-en">Start free today — in a minute, no card. And keep every task in its place.</span></p>
+      <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">ابدأ مجاناً الآن</span><span class="lang-en">Start free now</span></a>
     </div>
   </div>
 </section>
@@ -481,7 +503,7 @@
 <footer>
   <div class="wrap foot">
     <a class="brand" href="#top"><svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><ellipse cx="16" cy="16" rx="13" ry="6.5" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="5.5" fill="currentColor"/><circle cx="26.5" cy="8.5" r="2.6" fill="currentColor"/></svg>Orbitly</a>
-    <div class="links"><a href="#features">المميزات</a><a href="#pricing">الأسعار</a><a href="#faq">الأسئلة</a></div>
+    <div class="links"><a href="#features"><span class="lang-ar">المميزات</span><span class="lang-en">Features</span></a><a href="#pricing"><span class="lang-ar">الأسعار</span><span class="lang-en">Pricing</span></a><a href="#faq"><span class="lang-ar">الأسئلة</span><span class="lang-en">FAQ</span></a></div>
     <div class="copy">© Orbitly by Kvant</div>
   </div>
 </footer>
@@ -489,7 +511,19 @@
 <script>
   (function(){var m=document.getElementById('menu'),l=document.getElementById('navlinks');
     m.addEventListener('click',function(){l.classList.toggle('open')});
-    l.addEventListener('click',function(e){if(e.target.tagName==='A')l.classList.remove('open')});})();
+    l.addEventListener('click',function(e){if(e.target.closest('a'))l.classList.remove('open')});})();
+  (function(){
+    var btn=document.getElementById('lang');
+    function apply(lang){
+      var en = lang==='en';
+      document.body.classList.toggle('en', en);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = en ? 'ltr' : 'rtl';
+    }
+    btn.addEventListener('click',function(){
+      apply(document.body.classList.contains('en') ? 'ar' : 'en');
+    });
+  })();
   (function(){var els=document.querySelectorAll('.reveal');
     if(!('IntersectionObserver'in window)||matchMedia('(prefers-reduced-motion:reduce)').matches){els.forEach(function(e){e.classList.add('in')});return;}
     var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}})},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
