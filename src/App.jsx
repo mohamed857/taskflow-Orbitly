@@ -15,7 +15,7 @@ import Layout from './components/Layout.jsx'
 const Login = lazy(() => import('./pages/Login.jsx'))
 const RegisterCompany = lazy(() => import('./pages/RegisterCompany.jsx'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
-const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+const FounderConsole = lazy(() => import('./pages/FounderConsole.jsx'))
 const Pricing = lazy(() => import('./pages/Pricing.jsx'))
 const Subscription = lazy(() => import('./pages/Subscription.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
@@ -54,7 +54,6 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register-company" element={<RegisterCompany />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Pricing />} />
 
               {/* Authenticated Application Shell */}
@@ -97,6 +96,16 @@ export default function App() {
                 <Route path="teams" element={<TeamsPage />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="subscription" element={<Subscription />} />
+
+                {/* Founder console — platform owner only */}
+                <Route
+                  path="console"
+                  element={
+                    <RequireRole roles={['SUPER_ADMIN']}>
+                      <FounderConsole />
+                    </RequireRole>
+                  }
+                />
               </Route>
 
               {/* Wildcard Fallback */}

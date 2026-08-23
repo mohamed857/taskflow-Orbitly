@@ -168,6 +168,14 @@ export const auth = {
     request('/api/auth/reset-password', { method: 'POST', body: { token, newPassword }, auth: false })
 }
 
+// Founder console (SUPER_ADMIN only): platform-wide user management.
+export const admin = {
+  users: (query = '') =>
+    request(`/api/admin/users${query ? `?query=${encodeURIComponent(query)}` : ''}`),
+  resetPassword: (id, newPassword) =>
+    request(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } })
+}
+
 export const users = {
   // تجلب المستخدمين المتاحين طبقاً لـ Role المستخدم الحالية تلقائياً من الباك إند
   listInWorkspace: () => request('/api/users/workspace'),
