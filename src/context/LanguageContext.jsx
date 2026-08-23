@@ -25,6 +25,7 @@ const TRANSLATIONS = {
     'nav.workspace': 'Workspace',
     'nav.profile': 'Profile',
     'nav.subscription': 'Billing',
+    'nav.console': 'Founder',
     // topbar / menu
     'menu.viewProfile': 'View profile',
     'menu.signOut': 'Sign out',
@@ -61,6 +62,7 @@ const TRANSLATIONS = {
     'nav.workspace': 'مساحة العمل',
     'nav.profile': 'الملف الشخصي',
     'nav.subscription': 'الاشتراك',
+    'nav.console': 'المؤسس',
     'menu.viewProfile': 'عرض الملف الشخصي',
     'menu.signOut': 'تسجيل الخروج',
     'common.language': 'اللغة',

@@ -12,6 +12,7 @@ import {
   Network,
   UserCircle,
   CreditCard,
+  ShieldAlert,
   X,
   Cpu
 } from 'lucide-react'
@@ -45,6 +46,7 @@ const NAV_SECTIONS = [
       { to: '/teams', tkey: 'nav.teams', icon: Network },
       { to: '/workspaces', tkey: 'nav.workspace', icon: Building2 },
       { to: '/subscription', tkey: 'nav.subscription', icon: CreditCard, roles: ['ADMIN', 'MANAGER'] },
+      { to: '/console', tkey: 'nav.console', icon: ShieldAlert, roles: ['SUPER_ADMIN'] },
       { to: '/profile', tkey: 'nav.profile', icon: UserCircle }
     ]
   }

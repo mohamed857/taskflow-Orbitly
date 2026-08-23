@@ -68,7 +68,16 @@ export function AuthProvider({ children }) {
   }, [])
 
   const hasRole = useCallback(
-    (...roles) => Boolean(user?.role) && roles.includes(user.role),
+    (...roles) => {
+      if (!user?.role) return false
+      // The founder (SUPER_ADMIN) is the top of the hierarchy: they satisfy
+      // ADMIN/MANAGER checks too, so their own workspace-management UI still works.
+      const effective =
+        user.role === 'SUPER_ADMIN'
+          ? ['SUPER_ADMIN', 'ADMIN', 'MANAGER']
+          : [user.role]
+      return roles.some((r) => effective.includes(r))
+    },
     [user?.role]
   )
 

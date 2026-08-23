@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import { AuthProvider } from './context/AuthContext.jsx'
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { LanguageProvider } from './context/LanguageContext.jsx'
@@ -12,10 +12,11 @@ import RequireRole from './components/RequireRole.jsx'
 import Layout from './components/Layout.jsx'
 
 // Route-level code-splitting: each page becomes its own chunk, loaded on demand.
+const Landing = lazy(() => import('./pages/Landing.jsx'))
 const Login = lazy(() => import('./pages/Login.jsx'))
 const RegisterCompany = lazy(() => import('./pages/RegisterCompany.jsx'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
-const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+const FounderConsole = lazy(() => import('./pages/FounderConsole.jsx'))
 const Pricing = lazy(() => import('./pages/Pricing.jsx'))
 const Subscription = lazy(() => import('./pages/Subscription.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
@@ -40,6 +41,27 @@ function RouteFallback() {
   )
 }
 
+// Root ("/") is dual-purpose: logged-out visitors get the public marketing
+// landing (rendered full-screen, outside the app shell); logged-in users get
+// the dashboard inside the normal Layout. Deeper paths (/board, /users, …)
+// stay protected — an anonymous hit there falls through to the login redirect.
+function RootGate() {
+  const { status } = useAuth()
+  const location = useLocation()
+
+  if (status === 'checking') return <RouteFallback />
+
+  if (status !== 'authenticated' && location.pathname === '/') {
+    return <Landing />
+  }
+
+  return (
+    <ProtectedRoute>
+      <Layout />
+    </ProtectedRoute>
+  )
+}
+
 export default function App() {
   return (
     <LanguageProvider>
@@ -54,18 +76,10 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register-company" element={<RegisterCompany />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Pricing />} />
 
-              {/* Authenticated Application Shell */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Layout />
-                  </ProtectedRoute>
-                }
-              >
+              {/* Root shell — public landing for guests, dashboard for members */}
+              <Route path="/" element={<RootGate />}>
                 <Route index element={<Dashboard />} />
                 <Route path="board" element={<KanbanBoard />} />
                 <Route path="calendar" element={<CalendarPage />} />
@@ -97,6 +111,16 @@ export default function App() {
                 <Route path="teams" element={<TeamsPage />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="subscription" element={<Subscription />} />
+
+                {/* Founder console — platform owner only */}
+                <Route
+                  path="console"
+                  element={
+                    <RequireRole roles={['SUPER_ADMIN']}>
+                      <FounderConsole />
+                    </RequireRole>
+                  }
+                />
               </Route>
 
               {/* Wildcard Fallback */}

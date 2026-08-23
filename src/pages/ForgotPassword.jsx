@@ -1,25 +1,21 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { auth as authApi } from '../api/client.js'
-import { Mail, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react'
+import { Mail, ArrowLeft, LifeBuoy, Copy, Check } from 'lucide-react'
+import { useState } from 'react'
+
+// The support inbox shown to locked-out users. Set VITE_SUPPORT_EMAIL at build
+// time to your own address; this is the fallback.
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@orbitly.app'
 
 export default function ForgotPassword() {
-  const [identifier, setIdentifier] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [error, setError] = useState(null)
+  const [copied, setCopied] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  const copy = async () => {
     try {
-      await authApi.forgotPassword(identifier)
-      setSent(true)
-    } catch (err) {
-      setError(err.message || 'Could not process the request.')
-    } finally {
-      setLoading(false)
+      await navigator.clipboard.writeText(SUPPORT_EMAIL)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard may be blocked; the address is visible to copy manually */
     }
   }
 
@@ -32,59 +28,32 @@ export default function ForgotPassword() {
         </div>
 
         <div className="glass-panel p-8">
-          <h1 className="text-2xl font-bold text-paper mb-1 tracking-tight">Reset your password</h1>
-          <p className="text-xs text-fog mb-6">
-            Enter your email or username and we'll send a reset link.
+          <div className="h-11 w-11 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
+            <LifeBuoy size={22} />
+          </div>
+          <h1 className="text-2xl font-bold text-paper mb-1 tracking-tight">Forgot your password?</h1>
+          <p className="text-xs text-fog mb-6 leading-relaxed">
+            For your security, passwords are reset by our team. Email us from the address on your
+            account and we'll set a new one for you right away.
           </p>
 
-          {sent ? (
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-accent/10 border border-accent/20 text-accent text-xs">
-              <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
-              <span>
-                If an account matches, a password-reset link has been sent. Check your inbox (and in
-                development, the server logs).
-              </span>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="label-eyebrow block mb-1.5" htmlFor="identifier">
-                  Email or username
-                </label>
-                <div className="relative">
-                  <input
-                    id="identifier"
-                    type="text"
-                    required
-                    className="input-field pl-9"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="you@example.com or your username"
-                  />
-                  <Mail className="w-4 h-4 text-fog absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
+          <label className="label-eyebrow block mb-1.5">Contact us</label>
+          <div className="flex items-center gap-2">
+            <a
+              href={`mailto:${SUPPORT_EMAIL}?subject=Password%20reset%20request`}
+              className="flex-1 inline-flex items-center gap-2 text-sm font-mono bg-panelAlt/60 border border-panelBorder/60 rounded-lg px-3 py-2.5 text-paper hover:border-accent/40 transition-colors truncate"
+            >
+              <Mail size={15} className="text-accent shrink-0" />
+              <span className="truncate">{SUPPORT_EMAIL}</span>
+            </a>
+            <button onClick={copy} className="btn-ghost p-2.5 rounded-lg" title="Copy email">
+              {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
+            </button>
+          </div>
 
-              {error && (
-                <div className="p-3 rounded-lg bg-overdue/10 border border-overdue/20 text-overdue text-xs font-mono">
-                  {error}
-                </div>
-              )}
-
-              <button type="submit" disabled={loading} className="btn-primary w-full group mt-2">
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Sending…
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    Send reset link
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                  </span>
-                )}
-              </button>
-            </form>
-          )}
+          <p className="text-[11px] text-fog/70 mt-3 font-mono">
+            Tip: send it from your account email so we can verify it's you.
+          </p>
         </div>
 
         <p className="text-xs text-fog text-center mt-6">
