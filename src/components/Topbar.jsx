@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { Menu, LogOut, ChevronDown, Sun, Moon, User } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useI18n } from '../context/LanguageContext.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
 import RoleBadge from './RoleBadge.jsx'
 import SchedulerPulse from './SchedulerPulse.jsx'
 import NotificationBell from './NotificationBell.jsx'
@@ -13,6 +15,7 @@ import MessageBell from './MessageBell.jsx'
 export default function Topbar({ onMenuClick, onSweep, title }) {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { t, lang, toggleLang } = useI18n()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -48,6 +51,17 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
           <NotificationBell />
           <MessageBell />
 
+          {/* Language Switcher */}
+          <button
+            type="button"
+            onClick={toggleLang}
+            className="text-fog hover:text-paper rounded-lg p-2 hover:bg-panelAlt/60 border border-transparent hover:border-panelBorder/50 transition-all font-mono text-xs font-semibold min-w-[34px]"
+            title={t('common.language')}
+            aria-label={t('common.language')}
+          >
+            {lang === 'ar' ? 'EN' : 'ع'}
+          </button>
+
           {/* Theme Toggle Button */}
           <button
             type="button"
@@ -75,12 +89,12 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
               aria-haspopup="true"
             >
               <Avatar
-                name={user?.username || user?.email}
+                name={displayName(user)}
                 size={30}
                 src={avatarSrc(user?.avatarUrl)}
               />
               <span className="text-xs font-semibold text-paper hidden sm:inline max-w-[120px] truncate">
-                {user?.username || user?.email}
+                {displayName(user)}
               </span>
               <ChevronDown
                 size={14}
@@ -102,8 +116,11 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
                   {/* User Information Summary */}
                   <div className="px-4 py-3 border-b border-panelBorder/60 bg-panelAlt/30">
                     <p className="text-xs font-semibold text-paper truncate">
-                      {user?.username || 'User'}
+                      {displayName(user)}
                     </p>
+                    {user?.username && (
+                      <p className="text-[11px] text-accent font-mono truncate">@{user.username}</p>
+                    )}
                     <p className="text-[11px] text-fog font-mono truncate">
                       {user?.email}
                     </p>
@@ -124,7 +141,7 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
                       }}
                       className="w-full flex items-center gap-2 text-left px-3 py-2 text-xs font-medium text-fog hover:text-paper hover:bg-panelAlt/60 rounded-lg transition-colors cursor-pointer"
                     >
-                      <User size={14} /> View profile
+                      <User size={14} /> {t('menu.viewProfile')}
                     </button>
 
                     <button
@@ -132,7 +149,7 @@ export default function Topbar({ onMenuClick, onSweep, title }) {
                       onClick={logout}
                       className="w-full flex items-center gap-2 text-left px-3 py-2 text-xs font-medium text-overdue hover:bg-overdue/10 rounded-lg transition-colors mt-1 cursor-pointer"
                     >
-                      <LogOut size={14} /> Sign out
+                      <LogOut size={14} /> {t('menu.signOut')}
                     </button>
                   </div>
                 </div>

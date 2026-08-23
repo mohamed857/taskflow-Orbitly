@@ -4,6 +4,8 @@ import StatusChip, { STATUS_OPTIONS } from './StatusChip.jsx'
 import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
+import LabelChips from './LabelChips.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const RAIL_COLOR = {
@@ -36,12 +38,12 @@ function PersonRow({ label, person }) {
       {person ? (
         <div className="flex items-center gap-1.5 min-w-0 truncate">
           <Avatar
-            name={person.username || person.email}
+            name={displayName(person)}
             size={18}
             src={avatarSrc(person.avatarUrl)}
           />
           <span className="text-paper truncate font-medium text-xs">
-            {person.username || person.email}
+            {displayName(person)}
           </span>
         </div>
       ) : (
@@ -164,6 +166,8 @@ export default function TaskCards({
                     {task.description}
                   </p>
                 )}
+
+                <LabelChips labels={task.labels} />
               </div>
 
               {/* People Attribution - Separated with upper & lower borders */}

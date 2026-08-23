@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Loader2 } from 'lucide-react'
 import { tasks as tasksApi, users as usersApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -76,6 +77,17 @@ export default function CalendarPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWorkspaceView, isTeamLead])
 
+  // Refresh when the backend's overdue sweep fires (signalled via Layout).
+  const sweepSignal = useOutletContext()?.sweepSignal ?? 0
+  const prevSweepRef = useRef(sweepSignal)
+  useEffect(() => {
+    if (sweepSignal > 0 && sweepSignal !== prevSweepRef.current) {
+      prevSweepRef.current = sweepSignal
+      load()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sweepSignal])
+
   // Group tasks by Local YYYY-MM-DD
   const tasksByDay = useMemo(() => {
     const map = new Map()
@@ -130,6 +142,7 @@ export default function CalendarPage() {
       load()
     } catch (err) {
       push(err.message || 'Failed to create task.', 'error')
+      throw err // keep the task drawer open on failure
     }
   }
 

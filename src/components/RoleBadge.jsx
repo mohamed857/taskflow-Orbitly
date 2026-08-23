@@ -1,6 +1,7 @@
 import React from 'react'
 
 const STYLES = {
+  SUPER_ADMIN: { color: '#F472B6', label: 'Founder' },
   ADMIN: { color: '#A78BFA', label: 'Admin' },
   MANAGER: { color: '#38BDF8', label: 'Manager' },
   TEAM_LEAD: { color: '#34D399', label: 'Team Lead' },
@@ -27,4 +28,5 @@ export default function RoleBadge({ role, className = '' }) {
   )
 }
 
-export const ROLE_OPTIONS = Object.keys(STYLES)
+// The founder role is granted only via server config, never through the UI.
+export const ROLE_OPTIONS = Object.keys(STYLES).filter((r) => r !== 'SUPER_ADMIN')

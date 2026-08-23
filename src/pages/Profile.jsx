@@ -211,7 +211,10 @@ export default function Profile() {
         </div>
 
         <div className="min-w-0 text-center sm:text-left flex-1">
-          <h2 className="font-display text-xl font-bold text-paper truncate">{user?.username}</h2>
+          <h2 className="font-display text-xl font-bold text-paper truncate">{user?.name || user?.username}</h2>
+          {user?.username && (
+            <p className="text-xs text-accent font-mono">@{user.username}</p>
+          )}
           <div className="flex items-center justify-center sm:justify-start gap-3 mt-2 flex-wrap">
             <span className="flex items-center gap-1.5 text-xs text-fog font-mono bg-panelAlt/50 px-2.5 py-1 rounded-md border border-panelBorder/40">
               <Mail size={13} className="text-accent" /> {user?.email}

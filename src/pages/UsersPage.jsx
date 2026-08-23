@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound } from 'lucide-react'
 import { users as usersApi, teams as teamsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -8,17 +9,35 @@ import RoleBadge from '../components/RoleBadge.jsx'
 import StatCard from '../components/StatCard.jsx'
 import ChangeRoleModal from '../components/ChangeRoleModal.jsx'
 import CreateUserModal from '../components/CreateUserModal.jsx'
+import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
 import { canChangeRole, allowedTargetRoles, roleScopeHint } from '../utils/roles.js'
+import { displayName } from '../utils/userDisplay.js'
 
 export default function UsersPage() {
   const { user: actingUser, hasRole } = useAuth()
   const { push } = useToast()
+  const navigate = useNavigate()
+
+  // Open a direct message with a teammate straight from the roster.
+  const openChat = (u) =>
+    navigate('/messages', {
+      state: {
+        startWith: {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          name: u.name,
+          avatarUrl: u.avatarUrl
+        }
+      }
+    })
   
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [target, setTarget] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [resetTarget, setResetTarget] = useState(null)
   const [teamList, setTeamList] = useState([])
   const [assigningId, setAssigningId] = useState(null)
 
@@ -95,6 +114,7 @@ export default function UsersPage() {
       }
     } catch (err) {
       push(err.message || 'Could not update role.', 'error')
+      throw err // keep the modal open on failure
     }
   }
 
@@ -107,6 +127,7 @@ export default function UsersPage() {
       }
     } catch (err) {
       push(err.message || 'Could not create user.', 'error')
+      throw err // keep the modal open on failure
     }
   }
 
@@ -213,9 +234,12 @@ export default function UsersPage() {
                     <tr key={u.id} className="hover:bg-panelAlt/20 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <Avatar name={u.username || u.email} size={32} src={avatarSrc(u.avatarUrl)} />
+                          <Avatar name={displayName(u)} size={32} src={avatarSrc(u.avatarUrl)} />
                           <div className="min-w-0">
-                            <p className="text-paper text-xs font-semibold truncate">{u.username}</p>
+                            <p className="text-paper text-xs font-semibold truncate">
+                              {u.name || u.username}
+                              {u.name && <span className="text-fog font-normal font-mono ml-1.5">@{u.username}</span>}
+                            </p>
                             <p className="text-fog text-[11px] truncate">{u.email}</p>
                           </div>
                         </div>
@@ -266,18 +290,38 @@ export default function UsersPage() {
                           <span className="text-xs text-fog/50 font-mono italic">Unassigned</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {editable ? (
-                          <button
-                            onClick={() => setTarget(u)}
-                            title="Change user role"
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
-                          >
-                            <Pencil size={13} />
-                          </button>
-                        ) : (
-                          <span className="text-fog/50 text-[11px] font-mono">{disabledReason}</span>
-                        )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => openChat(u)}
+                              title={`Message ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <MessageSquare size={13} />
+                            </button>
+                          )}
+                          {canCreateUsers && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => setResetTarget(u)}
+                              title={`Reset password for ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <KeyRound size={13} />
+                            </button>
+                          )}
+                          {editable ? (
+                            <button
+                              onClick={() => setTarget(u)}
+                              title="Change user role"
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                          ) : (
+                            <span className="text-fog/50 text-[11px] font-mono">{disabledReason}</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -297,7 +341,15 @@ export default function UsersPage() {
         onSubmit={handleRoleSubmit}
       />
 
-      <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} />
+      <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} teams={teamList} />
+
+      {resetTarget && (
+        <ResetPasswordModal
+          target={resetTarget}
+          resetFn={(id, pw) => usersApi.resetPassword(id, pw)}
+          onClose={() => setResetTarget(null)}
+        />
+      )}
     </div>
   )
 }

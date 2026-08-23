@@ -4,12 +4,13 @@ import { MessageCircle, Loader2, ArrowRight } from 'lucide-react'
 import { messages as messagesApi, avatarSrc } from '../api/client.js'
 import { useChatDock } from '../context/ChatDockContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from './Avatar.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'now'
   if (diffMin < 60) return `${diffMin}m`
@@ -22,6 +23,7 @@ export default function MessageBell() {
   const navigate = useNavigate()
   const { push } = useToast()
   const { openChat } = useChatDock()
+  const { subscribeMessages } = useRealtime()
   const [open, setOpen] = useState(false)
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(false)
@@ -47,6 +49,11 @@ export default function MessageBell() {
       clearInterval(interval)
     }
   }, [])
+
+  // Live: bump the unread badge when a new message arrives over WebSocket.
+  useEffect(() => {
+    return subscribeMessages(() => setUnread((c) => c + 1))
+  }, [subscribeMessages])
 
   // Fetch conversations on popover open
   useEffect(() => {
@@ -157,7 +164,7 @@ export default function MessageBell() {
               </div>
             ) : (
               conversations.map((c) => {
-                const partnerName = c.partner?.username || c.partner?.email || 'User'
+                const partnerName = c.partner?.name || c.partner?.username || c.partner?.email || 'User'
                 const hasUnread = c.unreadCount > 0
 
                 return (

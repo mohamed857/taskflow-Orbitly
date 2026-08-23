@@ -173,4 +173,31 @@
       transform: translateY(0);
     }
   }
+
+  /* Animated brand mark: cycle the logo through the brand colors. Because the
+     logo fills use currentColor, animating `color` tints the whole mark. */
+  .logo-animated {
+    animation: logoHue 5s ease-in-out infinite;
+  }
+
+  @keyframes logoHue {
+    0% {
+      color: rgb(56 189 248);
+    }
+    33% {
+      color: rgb(129 140 248);
+    }
+    66% {
+      color: rgb(217 70 239);
+    }
+    100% {
+      color: rgb(56 189 248);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-animated {
+      animation: none;
+    }
+  }
 }

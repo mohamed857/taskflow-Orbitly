@@ -13,6 +13,8 @@ import StatusChip, { STATUS_OPTIONS } from './StatusChip.jsx'
 import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
+import LabelChips from './LabelChips.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function formatDue(dueDate) {
@@ -38,12 +40,12 @@ function PersonCell({ person }) {
   return (
     <div className="flex items-center gap-2 min-w-0">
       <Avatar
-        name={person.username || person.email}
+        name={displayName(person)}
         size={22}
         src={avatarSrc(person.avatarUrl)}
       />
       <span className="text-xs text-paper font-medium truncate">
-        {person.username || person.email}
+        {displayName(person)}
       </span>
     </div>
   )
@@ -187,6 +189,7 @@ export default function TaskList({
                         {task.description}
                       </p>
                     )}
+                    <LabelChips labels={task.labels} className="mt-1" />
                   </td>
 
                   {/* Reporter */}

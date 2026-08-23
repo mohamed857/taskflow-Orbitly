@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Bell, Check, UserPlus, MessageSquare, ShieldAlert, AlertTriangle, Loader2, RefreshCw, Users } from 'lucide-react'
 import { notifications as notificationsApi, tasks as tasksApi } from '../api/client.js'
 import { useToast } from '../context/ToastContext.jsx'
+import { useRealtime } from '../context/RealtimeContext.jsx'
 import TaskDetailModal from './TaskDetailModal.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 const ICONS = {
   TASK_ASSIGNED: UserPlus,
@@ -14,9 +16,8 @@ const ICONS = {
 }
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'just now'
   if (diffMin < 60) return `${diffMin}m ago`
@@ -27,6 +28,7 @@ function formatWhen(dateStr) {
 
 export default function NotificationBell() {
   const { push } = useToast()
+  const { subscribeNotifications } = useRealtime()
   const [open, setOpen] = useState(false)
   const [list, setList] = useState([])
   const [unread, setUnread] = useState(0)
@@ -42,7 +44,16 @@ export default function NotificationBell() {
       .catch(() => {})
   }
 
-  // Periodic polling for unread count
+  // Live notifications pushed over WebSocket: bump the badge and, if the
+  // dropdown is open, prepend the new item so it appears without a refresh.
+  useEffect(() => {
+    return subscribeNotifications((n) => {
+      setUnread((c) => c + 1)
+      setList((cur) => (cur.some((x) => x.id === n.id) ? cur : [n, ...cur]))
+    })
+  }, [subscribeNotifications])
+
+  // Periodic polling for unread count (fallback / reconciliation)
   useEffect(() => {
     let isMounted = true
     refreshUnread()

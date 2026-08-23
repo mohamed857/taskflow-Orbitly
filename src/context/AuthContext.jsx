@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { auth as authApi, getToken, setToken } from '../api/client.js'
+import { auth as authApi, getToken, setToken, getRefreshToken, setRefreshToken } from '../api/client.js'
 
 const AuthContext = createContext(null)
 
@@ -8,7 +8,13 @@ export function AuthProvider({ children }) {
   const [status, setStatus] = useState('checking') // checking | authenticated | anonymous
 
   const logout = useCallback(() => {
+    // Best-effort server-side revoke of this session's refresh token.
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      authApi.logout(refreshToken).catch(() => {})
+    }
     setToken(null)
+    setRefreshToken(null)
     setUser(null)
     setStatus('anonymous')
   }, [])
@@ -20,21 +26,12 @@ export function AuthProvider({ children }) {
       return
     }
 
-    let isMounted = true
     try {
       const me = await authApi.me()
-      if (isMounted) {
-        setUser(me)
-        setStatus('authenticated')
-      }
+      setUser(me)
+      setStatus('authenticated')
     } catch (err) {
-      if (isMounted) {
-        logout()
-      }
-    }
-
-    return () => {
-      isMounted = false
+      logout()
     }
   }, [logout])
 
@@ -42,10 +39,21 @@ export function AuthProvider({ children }) {
     loadUser()
   }, [loadUser])
 
+  // The API layer dispatches this event when any request comes back 401 and
+  // clears the stored token. Without a listener the app kept its stale
+  // "authenticated" state and never redirected to /login. Reacting here flips
+  // the app to anonymous so ProtectedRoute sends the user to the login page.
+  useEffect(() => {
+    const handleUnauthorized = () => logout()
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [logout])
+
   const login = useCallback(
     async (credentials) => {
-      const { token } = await authApi.login(credentials)
+      const { token, refreshToken } = await authApi.login(credentials)
       setToken(token)
+      setRefreshToken(refreshToken)
       await loadUser()
     },
     [loadUser]
@@ -60,7 +68,16 @@ export function AuthProvider({ children }) {
   }, [])
 
   const hasRole = useCallback(
-    (...roles) => Boolean(user?.role) && roles.includes(user.role),
+    (...roles) => {
+      if (!user?.role) return false
+      // The founder (SUPER_ADMIN) is the top of the hierarchy: they satisfy
+      // ADMIN/MANAGER checks too, so their own workspace-management UI still works.
+      const effective =
+        user.role === 'SUPER_ADMIN'
+          ? ['SUPER_ADMIN', 'ADMIN', 'MANAGER']
+          : [user.role]
+      return roles.some((r) => effective.includes(r))
+    },
     [user?.role]
   )
 

@@ -3,18 +3,22 @@ import { X, Minus, Send, Loader2 } from 'lucide-react'
 import { messages as messagesApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from './Avatar.jsx'
+import { formatServerTime } from '../utils/serverTime.js'
 
 function formatTime(timestamp) {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return formatServerTime(timestamp)
 }
 
 export default function ChatWindow({ partner, onClose }) {
   const { user } = useAuth()
   const { push } = useToast()
+  const { subscribeMessages, subscribeReads, subscribeTyping, sendTyping, isOnline } = useRealtime()
+  const [partnerTyping, setPartnerTyping] = useState(false)
+  const typingSentAtRef = useRef(0)
+  const typingStopTimerRef = useRef(null)
+  const typingClearRef = useRef(null)
   const [thread, setThread] = useState([])
   const [loading, setLoading] = useState(true)
   const [minimized, setMinimized] = useState(false)
@@ -45,6 +49,49 @@ export default function ChatWindow({ partner, onClose }) {
       isMounted = false
     }
   }, [partner.id])
+
+  // Live incoming messages from this partner.
+  useEffect(() => {
+    return subscribeMessages((msg) => {
+      if (msg.sender?.id === partner.id || msg.recipient?.id === partner.id) {
+        setThread((cur) => (cur.some((m) => m.id === msg.id) ? cur : [...cur, msg]))
+      }
+    })
+  }, [subscribeMessages, partner.id])
+
+  // Live read receipts: partner saw our messages -> mark them seen.
+  useEffect(() => {
+    return subscribeReads((receipt) => {
+      if (receipt.readerId === partner.id) {
+        setThread((cur) => cur.map((m) => (m.sender?.id === user?.id ? { ...m, read: true } : m)))
+      }
+    })
+  }, [subscribeReads, partner.id, user?.id])
+
+  // Live typing indicator from this partner.
+  useEffect(() => {
+    return subscribeTyping((evt) => {
+      if (evt.fromUserId !== partner.id) return
+      setPartnerTyping(evt.typing)
+      if (evt.typing) {
+        clearTimeout(typingClearRef.current)
+        typingClearRef.current = setTimeout(() => setPartnerTyping(false), 4000)
+      }
+    })
+  }, [subscribeTyping, partner.id])
+
+  const notifyTyping = () => {
+    const now = Date.now()
+    if (now - typingSentAtRef.current > 2000) {
+      sendTyping(partner.id, true)
+      typingSentAtRef.current = now
+    }
+    clearTimeout(typingStopTimerRef.current)
+    typingStopTimerRef.current = setTimeout(() => {
+      sendTyping(partner.id, false)
+      typingSentAtRef.current = 0
+    }, 2500)
+  }
 
   // Scroll to bottom whenever messages arrive or dock expands
   useEffect(() => {
@@ -77,6 +124,8 @@ export default function ChatWindow({ partner, onClose }) {
     // Optimistic Update
     setThread((cur) => [...cur, tempMessage])
     setDraft('')
+    sendTyping(partner.id, false)
+    clearTimeout(typingStopTimerRef.current)
     setSending(true)
 
     try {
@@ -93,7 +142,7 @@ export default function ChatWindow({ partner, onClose }) {
     }
   }
 
-  const partnerName = partner.username || partner.email || 'User'
+  const partnerName = partner.name || partner.username || partner.email || 'User'
 
   return (
     <div
@@ -110,9 +159,13 @@ export default function ChatWindow({ partner, onClose }) {
           name={partnerName}
           size={24}
           src={avatarSrc(partner.avatarUrl)}
+          status={isOnline(partner.id) ? 'online' : 'offline'}
         />
         <span className="text-xs font-semibold text-paper flex-1 truncate font-display">
           {partnerName}
+          <span className={`ml-1.5 font-mono text-[9px] font-normal ${partnerTyping ? 'text-accent' : isOnline(partner.id) ? 'text-completed' : 'text-fog'}`}>
+            {partnerTyping ? 'typing…' : isOnline(partner.id) ? 'online' : 'offline'}
+          </span>
         </span>
 
         {/* Minimize Action */}
@@ -197,6 +250,15 @@ export default function ChatWindow({ partner, onClose }) {
                 )
               })
             )}
+            {(() => {
+              let lastMine = null
+              for (let i = thread.length - 1; i >= 0; i--) {
+                if (thread[i].sender?.id === user?.id) { lastMine = thread[i]; break }
+              }
+              return lastMine?.read ? (
+                <p className="text-[9px] font-mono text-fog/80 text-right px-1">Seen</p>
+              ) : null
+            })()}
             <div ref={messagesEndRef} />
           </div>
 
@@ -211,7 +273,10 @@ export default function ChatWindow({ partner, onClose }) {
               className="input-field flex-1 text-xs py-1.5 px-3 rounded-lg bg-panelAlt/50 focus:bg-panelAlt border border-panelBorder/60"
               placeholder="Type a message…"
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => {
+                setDraft(e.target.value)
+                notifyTyping()
+              }}
               disabled={sending}
             />
             <button
