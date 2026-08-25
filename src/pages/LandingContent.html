@@ -229,6 +229,36 @@
   .foot .links a:hover{color:var(--blue-ink)}
   .copy{color:var(--ink-2); font-size:.86rem; font-family:var(--f-head); font-weight:600}
 
+  /* ===== phones — keep everything tidy and edge-safe ===== */
+  @media (max-width:600px){
+    body{font-size:16px}
+    .wrap{padding-inline:16px}
+    .nav-in{height:60px}
+    .brand{font-size:1.18rem}
+    .brand .mark{width:26px; height:26px}
+    .nav-actions{gap:.4rem}
+    .btn{padding:.62rem 1rem; font-size:.9rem; border-radius:12px}
+    .lang-btn{padding:.42rem .6rem; font-size:.78rem}
+    .hero{padding-top:24px}
+    .hero-cta{gap:.7rem; margin-top:1.4rem}
+    .note-hand{font-size:1.15rem}
+    .assur{gap:.8rem 1.1rem; margin-top:1.2rem}
+    .peek{padding:14px; border-radius:18px}
+    .trow{padding:9px 10px; gap:.5rem}
+    .trow .tt{font-size:.82rem}
+    .doodle-planet{width:52px; inset-block-start:-30px; inset-inline-end:-6px}
+    .doodle-arrow{width:92px; inset-inline-start:-14px; inset-block-end:24px}
+    .manifesto p{font-size:1.5rem}
+    .sec-head{margin-bottom:24px}
+    .bento{gap:12px}
+    .b{padding:18px; border-radius:18px}
+    .plan{padding:20px 18px}
+    .founder-in{gap:18px}
+    .stamp{width:70px; height:70px; font-size:1.25rem}
+    .final{padding:34px 20px; border-radius:22px}
+    footer .foot{flex-direction:column; align-items:flex-start; gap:12px}
+  }
+
   .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)}
   .reveal.in{opacity:1; transform:none}
   @media (prefers-reduced-motion:reduce){*{animation:none !important; scroll-behavior:auto}.reveal{opacity:1; transform:none; transition:none}.peek{transform:rotate(-2.2deg) !important}}
@@ -512,6 +542,19 @@
   (function(){var m=document.getElementById('menu'),l=document.getElementById('navlinks');
     m.addEventListener('click',function(){l.classList.toggle('open')});
     l.addEventListener('click',function(e){if(e.target.closest('a'))l.classList.remove('open')});})();
+  // In-page anchor scrolling. This page is hosted inside a srcdoc iframe, where
+  // plain href="#id" links don't scroll (their base is about:srcdoc), so we
+  // handle same-page anchors manually with scrollIntoView.
+  (function(){
+    document.addEventListener('click',function(e){
+      var a=e.target.closest('a[href^="#"]');
+      if(!a) return;
+      var id=a.getAttribute('href').slice(1);
+      if(!id) return;
+      var el=document.getElementById(id);
+      if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    });
+  })();
   (function(){
     var btn=document.getElementById('lang');
     function apply(lang){

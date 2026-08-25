@@ -134,7 +134,7 @@ export default function MessageBell() {
 
       {/* Popover Menu */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-84 glass-panel rounded-xl border border-panelBorder/80 z-50 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-1.5rem))] sm:w-80 glass-panel rounded-xl border border-panelBorder/80 z-50 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Header */}
           <div className="flex items-center justify-between px-3.5 py-2.5 bg-panel/60 border-b border-panelBorder/60">
             <span className="label-eyebrow font-display tracking-wider">Messages</span>

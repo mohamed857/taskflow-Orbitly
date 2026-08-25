@@ -45,6 +45,9 @@ export default function UsersPage() {
 
   const canCreateUsers = hasRole('ADMIN', 'MANAGER')
   const canAssignAnyTeam = hasRole('ADMIN', 'MANAGER')
+  // Only an Admin (SUPER_ADMIN counts as Admin) may reset another member's
+  // password. Managers change only their own password from their profile.
+  const canResetPasswords = hasRole('ADMIN')
   const isTeamLead = hasRole('TEAM_LEAD')
 
   // Load Workspace Roster safely
@@ -301,7 +304,7 @@ export default function UsersPage() {
                               <MessageSquare size={13} />
                             </button>
                           )}
-                          {canCreateUsers && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
+                          {canResetPasswords && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
                             <button
                               onClick={() => setResetTarget(u)}
                               title={`Reset password for ${u.name || u.username}`}
