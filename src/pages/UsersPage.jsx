@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound } from 'lucide-react'
+import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound, Trash2 } from 'lucide-react'
 import { users as usersApi, teams as teamsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -40,6 +40,27 @@ export default function UsersPage() {
   const [resetTarget, setResetTarget] = useState(null)
   const [teamList, setTeamList] = useState([])
   const [assigningId, setAssigningId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+
+  // Admin-only: permanently delete a member. Their tasks move to the acting admin.
+  const handleDelete = async (u) => {
+    const label = u.name || u.username
+    if (!window.confirm(
+      `Delete ${label}? This permanently removes their account. Their tasks will be reassigned to you. This can't be undone.`
+    )) return
+    setDeletingId(u.id)
+    const prev = list
+    setList((cur) => cur.filter((x) => x.id !== u.id))
+    try {
+      await usersApi.remove(u.id)
+      push('User deleted.', 'success')
+    } catch (err) {
+      setList(prev) // restore on failure
+      push(err.message || 'Could not delete the user.', 'error')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const isMountedRef = useRef(true)
 
@@ -311,6 +332,16 @@ export default function UsersPage() {
                               className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
                             >
                               <KeyRound size={13} />
+                            </button>
+                          )}
+                          {canResetPasswords && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => handleDelete(u)}
+                              disabled={deletingId === u.id}
+                              title={`Delete ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-overdue hover:border-overdue hover:bg-overdue/10 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === u.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                             </button>
                           )}
                           {editable ? (

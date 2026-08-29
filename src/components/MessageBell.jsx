@@ -119,7 +119,14 @@ export default function MessageBell() {
       {/* Trigger Button */}
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          // On phones the dropdown doesn't fit — open the full Messages page.
+          if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) {
+            navigate('/messages')
+            return
+          }
+          setOpen((v) => !v)
+        }}
         className="relative text-fog hover:text-paper rounded-lg p-2 hover:bg-panelAlt/60 transition-colors focus:outline-none focus:ring-1 focus:ring-accent/50 cursor-pointer"
         aria-label="Messages"
         aria-expanded={open}

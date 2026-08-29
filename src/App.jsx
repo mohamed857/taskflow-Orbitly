@@ -23,6 +23,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage.jsx'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage.jsx'))
 const MyTasks = lazy(() => import('./pages/MyTasks.jsx'))
 const AssignedTasks = lazy(() => import('./pages/AssignedTasks.jsx'))
 const WorkspaceTasks = lazy(() => import('./pages/WorkspaceTasks.jsx'))
@@ -84,6 +85,7 @@ export default function App() {
                 <Route path="board" element={<KanbanBoard />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="messages" element={<MessagesPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="tasks/mine" element={<MyTasks />} />
                 <Route path="tasks/assigned" element={<AssignedTasks />} />
 

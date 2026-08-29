@@ -190,6 +190,8 @@ export const users = {
   changePassword: (currentPassword, newPassword) =>
     request('/api/users/me/password', { method: 'PATCH', body: { currentPassword, newPassword } }),
   create: (payload) => request('/api/users', { method: 'POST', body: payload }),
+  // Admin only: permanently delete a member of the workspace.
+  remove: (id) => request(`/api/users/${id}`, { method: 'DELETE' }),
   uploadAvatar: async (file, { silent = false } = {}) => {
     const form = new FormData()
     form.append('file', file)
