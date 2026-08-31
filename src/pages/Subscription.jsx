@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Check, Loader2, Star, Users, Layers } from 'lucide-react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { Check, Loader2, Star, Users, Layers, Lock } from 'lucide-react'
 import { plans as plansApi, subscription as subscriptionApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -16,7 +16,7 @@ function UsageBar({ icon: Icon, label, used, limit, unlimited, ar }) {
         </span>
         <span className="font-mono text-xs text-fog">
           {used}
-          {unlimited ? ` / ${ar ? '∞' : '∞'}` : ` / ${limit}`}
+          {unlimited ? ' / ∞' : ` / ${limit}`}
         </span>
       </div>
       {!unlimited && (
@@ -32,6 +32,25 @@ function UsageBar({ icon: Icon, label, used, limit, unlimited, ar }) {
   )
 }
 
+function Segmented({ options, value, onChange }) {
+  return (
+    <div className="inline-flex rounded-lg border border-panelBorder bg-panelAlt/40 p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+            value === o.value ? 'bg-accent text-white' : 'text-fog hover:text-paper'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function Subscription() {
   const { hasRole } = useAuth()
   const { push } = useToast()
@@ -43,6 +62,8 @@ export default function Subscription() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [changing, setChanging] = useState(null)
+  const [cycle, setCycle] = useState('monthly')
+  const [currency, setCurrency] = useState('usd')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -60,6 +81,41 @@ export default function Subscription() {
   useEffect(() => {
     load()
   }, [load])
+
+  const yearly = cycle === 'yearly'
+  const egp = currency === 'egp'
+
+  const money = (amount) => {
+    const n = Number(amount || 0).toLocaleString(ar ? 'ar-EG' : 'en-US')
+    return egp ? (ar ? `${n} ج.م` : `${n} EGP`) : `$${n}`
+  }
+  const priceFor = (p) => (yearly ? (egp ? p.yearlyEgp : p.yearlyUsd) : egp ? p.monthlyEgp : p.monthlyUsd)
+
+  // A plan is a blocked downgrade when its limits are below current usage.
+  const isDowngradeBlocked = useCallback(
+    (p) => {
+      if (!sub) return false
+      const overMembers = !p.unlimitedMembers && (sub.membersUsed ?? 0) > p.maxMembers
+      const overTeams = !p.unlimitedTeams && (sub.teamsUsed ?? 0) > p.maxTeams
+      return overMembers || overTeams
+    },
+    [sub]
+  )
+
+  const cycleOptions = useMemo(
+    () => [
+      { value: 'monthly', label: ar ? 'شهري' : 'Monthly' },
+      { value: 'yearly', label: ar ? 'سنوي' : 'Yearly' }
+    ],
+    [ar]
+  )
+  const currencyOptions = useMemo(
+    () => [
+      { value: 'usd', label: 'USD $' },
+      { value: 'egp', label: ar ? 'ج.م' : 'EGP' }
+    ],
+    [ar]
+  )
 
   const switchPlan = async (key) => {
     if (!isAdmin || key === sub?.plan) return
@@ -118,13 +174,27 @@ export default function Subscription() {
 
       {/* Plans */}
       <div>
-        <p className="label-eyebrow text-xs font-mono text-fog mb-3">
-          {ar ? 'الباقات المتاحة' : 'Available plans'}
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <p className="label-eyebrow text-xs font-mono text-fog">
+            {ar ? 'الباقات المتاحة' : 'Available plans'}
+          </p>
+          <div className="flex items-center gap-2">
+            <Segmented options={cycleOptions} value={cycle} onChange={setCycle} />
+            {yearly && (
+              <span className="inline-flex items-center rounded-full bg-completed/15 text-completed px-2 py-0.5 text-[10px] font-semibold">
+                {ar ? 'شهران مجانًا' : '2 mo free'}
+              </span>
+            )}
+            <Segmented options={currencyOptions} value={currency} onChange={setCurrency} />
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
           {plans.map((p) => {
             const current = p.key === sub?.plan
             const highlight = p.key === 'PRO'
+            const free = p.monthlyUsd === 0
+            const blocked = !current && isDowngradeBlocked(p)
             return (
               <div
                 key={p.key}
@@ -138,9 +208,24 @@ export default function Subscription() {
                   </span>
                 )}
                 <h3 className="font-display font-bold text-paper">{p.name}</h3>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="font-display text-2xl font-bold text-paper">${p.pricePerUser}</span>
-                  <span className="text-fog text-[10px] font-mono">/{ar ? 'مستخدم/شهر' : 'user/mo'}</span>
+                <div className="mt-2 min-h-[3rem]">
+                  {free ? (
+                    <span className="font-display text-2xl font-bold text-paper">{ar ? 'مجانًا' : 'Free'}</span>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline gap-1 flex-wrap">
+                        <span className="font-display text-2xl font-bold text-paper">{money(priceFor(p))}</span>
+                        <span className="text-fog text-[10px] font-mono">
+                          /{ar ? 'مستخدم' : 'user'}/{yearly ? (ar ? 'سنة' : 'yr') : ar ? 'شهر' : 'mo'}
+                        </span>
+                      </div>
+                      {yearly && (
+                        <p className="text-[10px] text-fog font-mono mt-0.5">
+                          ≈ {money(Math.round((egp ? p.yearlyEgp : p.yearlyUsd) / 12))}/{ar ? 'شهر' : 'mo'}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
                 <div className="mt-3 space-y-1 text-[11px] text-fog font-mono">
                   <p>{p.unlimitedMembers ? (ar ? '∞ عضو' : '∞ members') : `${p.maxMembers} ${ar ? 'عضو' : 'members'}`}</p>
@@ -152,7 +237,22 @@ export default function Subscription() {
                     <span className="h-9 rounded-lg bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center gap-1">
                       <Check size={14} /> {ar ? 'باقتك الحالية' : 'Current plan'}
                     </span>
-                  ) : isAdmin ? (
+                  ) : !isAdmin ? (
+                    <span className="text-[10px] text-fog/70 font-mono block text-center">
+                      {ar ? 'المالك فقط يغيّر الباقة' : 'Owner changes the plan'}
+                    </span>
+                  ) : blocked ? (
+                    <div className="space-y-1.5">
+                      <span className="h-9 rounded-lg bg-overdue/10 text-overdue text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed">
+                        <Lock size={12} /> {ar ? 'غير متاح' : 'Unavailable'}
+                      </span>
+                      <p className="text-[10px] text-overdue/90 text-center leading-tight">
+                        {ar
+                          ? 'استخدامك الحالي يتجاوز حدود هذه الباقة. أزل أعضاء أو فرقًا أولًا.'
+                          : 'Your usage exceeds this plan. Remove members or teams first.'}
+                      </p>
+                    </div>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => switchPlan(p.key)}
@@ -162,10 +262,6 @@ export default function Subscription() {
                       {changing === p.key && <Loader2 size={13} className="animate-spin" />}
                       {ar ? 'التبديل لهذه الباقة' : 'Switch to this plan'}
                     </button>
-                  ) : (
-                    <span className="text-[10px] text-fog/70 font-mono block text-center">
-                      {ar ? 'المالك فقط يغيّر الباقة' : 'Owner changes the plan'}
-                    </span>
                   )}
                 </div>
               </div>

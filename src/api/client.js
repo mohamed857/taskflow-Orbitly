@@ -173,7 +173,10 @@ export const admin = {
   users: (query = '') =>
     request(`/api/admin/users${query ? `?query=${encodeURIComponent(query)}` : ''}`),
   resetPassword: (id, newPassword) =>
-    request(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } })
+    request(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
+  // Live, DB-driven plan pricing (per-plan monthly USD + USD→EGP rate).
+  pricing: () => request('/api/admin/pricing'),
+  updatePricing: (payload) => request('/api/admin/pricing', { method: 'PUT', body: payload })
 }
 
 export const users = {

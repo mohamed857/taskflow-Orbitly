@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Search as SearchIcon, ShieldAlert, KeyRound, Loader2 } from 'lucide-react'
+import { Search as SearchIcon, ShieldAlert, KeyRound, Loader2, Users as UsersIcon, DollarSign } from 'lucide-react'
 import { admin as adminApi, avatarSrc } from '../api/client.js'
 import { useToast } from '../context/ToastContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import RoleBadge from '../components/RoleBadge.jsx'
 import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
 import { displayName } from '../utils/userDisplay.js'
+import FounderPricing from './FounderPricing.jsx'
 
-export default function FounderConsole() {
+function UsersTab() {
   const { push } = useToast()
   const [query, setQuery] = useState('')
   const [list, setList] = useState([])
@@ -31,7 +32,6 @@ export default function FounderConsole() {
     load('')
   }, [load])
 
-  // Debounced search as the founder types.
   useEffect(() => {
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => load(query.trim()), 300)
@@ -40,21 +40,7 @@ export default function FounderConsole() {
   }, [query])
 
   return (
-    <div className="space-y-6 animate-enter">
-      <div className="glass-panel p-5 border border-panelBorder/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
-            <ShieldAlert size={20} />
-          </div>
-          <div>
-            <h2 className="font-display text-xl font-bold tracking-tight text-paper">Founder Console</h2>
-            <p className="text-xs font-mono text-fog mt-0.5">
-              Every user across all workspaces. Search by id, email, or name — and reset any password.
-            </p>
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-5">
       <div className="relative sm:max-w-md">
         <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-fog" />
         <input
@@ -131,6 +117,54 @@ export default function FounderConsole() {
           onClose={() => setTarget(null)}
         />
       )}
+    </div>
+  )
+}
+
+export default function FounderConsole() {
+  const [tab, setTab] = useState('users') // 'users' | 'pricing'
+
+  const tabs = [
+    { key: 'users', label: 'Users', icon: UsersIcon },
+    { key: 'pricing', label: 'Pricing', icon: DollarSign }
+  ]
+
+  return (
+    <div className="space-y-6 animate-enter">
+      <div className="glass-panel p-5 border border-panelBorder/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+            <ShieldAlert size={20} />
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-bold tracking-tight text-paper">Founder Console</h2>
+            <p className="text-xs font-mono text-fog mt-0.5">
+              Platform-wide administration — manage every user, and set live plan pricing.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-panelBorder/60">
+        {tabs.map((t) => {
+          const Icon = t.icon
+          const active = tab === t.key
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                active ? 'border-accent text-accent' : 'border-transparent text-fog hover:text-paper'
+              }`}
+            >
+              <Icon size={15} /> {t.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {tab === 'users' ? <UsersTab /> : <FounderPricing />}
     </div>
   )
 }
