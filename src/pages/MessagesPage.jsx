@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Send, Search, X, MessageSquarePlus, Loader2, ArrowLeft } from 'lucide-react'
 import { messages as messagesApi, users as usersApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from '../components/Avatar.jsx'
+import { displayName } from '../utils/userDisplay.js'
 import Portal from '../components/Portal.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'now'
   if (diffMin < 60) return `${diffMin}m`
@@ -23,7 +26,8 @@ function NewConversationPicker({ currentUserId, onPick, onClose }) {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    usersApi.listInWorkspace().then(setTeam).catch(() => {})
+    // Directory (workspace-wide), so a Team Lead can DM anyone — not just their team.
+    usersApi.directory().then(setTeam).catch(() => {})
   }, [])
 
   const filtered = team
@@ -70,10 +74,10 @@ function NewConversationPicker({ currentUserId, onPick, onClose }) {
                   onClick={() => onPick(u)}
                   className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg hover:bg-panelAlt/60 transition-all text-left group"
                 >
-                  <Avatar name={u.username || u.email} size={32} src={avatarSrc(u.avatarUrl)} />
+                  <Avatar name={displayName(u)} size={32} src={avatarSrc(u.avatarUrl)} />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-paper truncate group-hover:text-accent transition-colors">
-                      {u.username}
+                      {displayName(u)}
                     </p>
                     <p className="text-[11px] text-fog truncate">{u.email}</p>
                   </div>
@@ -90,6 +94,13 @@ function NewConversationPicker({ currentUserId, onPick, onClose }) {
 export default function MessagesPage() {
   const { user } = useAuth()
   const { push } = useToast()
+  const location = useLocation()
+  const startedFromNavRef = useRef(false)
+  const { subscribeMessages, subscribeReads, subscribeTyping, sendTyping, isOnline } = useRealtime()
+  const [partnerTyping, setPartnerTyping] = useState(false)
+  const typingSentAtRef = useRef(0)
+  const typingStopTimerRef = useRef(null)
+  const typingClearRef = useRef(null)
   const [conversations, setConversations] = useState([])
   const [loadingList, setLoadingList] = useState(true)
   const [activePartner, setActivePartner] = useState(null)
@@ -99,6 +110,83 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const bottomRef = useRef(null)
+
+  // Keep the active partner reachable from the (stable) realtime callbacks.
+  const activePartnerRef = useRef(activePartner)
+  useEffect(() => {
+    activePartnerRef.current = activePartner
+  }, [activePartner])
+
+  // Live incoming messages pushed over WebSocket.
+  useEffect(() => {
+    return subscribeMessages((msg) => {
+      const partnerId = msg.sender?.id === user?.id ? msg.recipient?.id : msg.sender?.id
+      const viewing = activePartnerRef.current?.id === partnerId
+      if (viewing) {
+        setThread((cur) => (cur.some((m) => m.id === msg.id) ? cur : [...cur, msg]))
+      }
+      setConversations((cur) => {
+        const exists = cur.some((c) => c.partner.id === partnerId)
+        const updated = exists
+          ? cur.map((c) =>
+              c.partner.id === partnerId
+                ? {
+                    ...c,
+                    lastMessage: msg.content,
+                    lastMessageAt: msg.createdAt,
+                    unreadCount: viewing ? 0 : (c.unreadCount || 0) + 1
+                  }
+                : c
+            )
+          : [
+              {
+                partner: msg.sender,
+                lastMessage: msg.content,
+                lastMessageAt: msg.createdAt,
+                unreadCount: viewing ? 0 : 1
+              },
+              ...cur
+            ]
+        return [...updated].sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      })
+    })
+  }, [subscribeMessages, user?.id])
+
+  // Live read receipts: the partner opened our conversation -> mark my messages seen.
+  useEffect(() => {
+    return subscribeReads((receipt) => {
+      if (activePartnerRef.current?.id === receipt.readerId) {
+        setThread((cur) => cur.map((m) => (m.sender?.id === user?.id ? { ...m, read: true } : m)))
+      }
+    })
+  }, [subscribeReads, user?.id])
+
+  // Live typing indicator from the active partner.
+  useEffect(() => {
+    return subscribeTyping((evt) => {
+      if (activePartnerRef.current?.id !== evt.fromUserId) return
+      setPartnerTyping(evt.typing)
+      if (evt.typing) {
+        clearTimeout(typingClearRef.current)
+        typingClearRef.current = setTimeout(() => setPartnerTyping(false), 4000)
+      }
+    })
+  }, [subscribeTyping])
+
+  // Tell the partner we're typing (throttled), and that we stopped after a pause.
+  const notifyTyping = () => {
+    if (!activePartner) return
+    const now = Date.now()
+    if (now - typingSentAtRef.current > 2000) {
+      sendTyping(activePartner.id, true)
+      typingSentAtRef.current = now
+    }
+    clearTimeout(typingStopTimerRef.current)
+    typingStopTimerRef.current = setTimeout(() => {
+      sendTyping(activePartner.id, false)
+      typingSentAtRef.current = 0
+    }, 2500)
+  }
 
   const loadConversations = () => {
     setLoadingList(true)
@@ -116,6 +204,7 @@ export default function MessagesPage() {
   const openThread = (partner) => {
     setActivePartner(partner)
     setThread([])
+    setPartnerTyping(false)
     setLoadingThread(true)
 
     messagesApi
@@ -134,6 +223,16 @@ export default function MessagesPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [thread])
 
+  // Opened via the "Message" button on the roster: jump straight into that DM.
+  useEffect(() => {
+    const startWith = location.state?.startWith
+    if (startWith?.id && !startedFromNavRef.current) {
+      startedFromNavRef.current = true
+      openThread(startWith)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state])
+
   const send = async (e) => {
     e.preventDefault()
     const content = draft.trim()
@@ -143,6 +242,8 @@ export default function MessagesPage() {
       const sent = await messagesApi.send(activePartner.id, content)
       setThread((cur) => [...cur, sent])
       setDraft('')
+      sendTyping(activePartner.id, false)
+      clearTimeout(typingStopTimerRef.current)
       setConversations((cur) => {
         const exists = cur.some((c) => c.partner.id === activePartner.id)
         const updated = exists
@@ -219,10 +320,11 @@ export default function MessagesPage() {
                     name={c.partner.username || c.partner.email}
                     size={36}
                     src={avatarSrc(c.partner.avatarUrl)}
+                    status={isOnline(c.partner.id) ? 'online' : undefined}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <p className="text-xs font-semibold text-paper truncate">{c.partner.username}</p>
+                      <p className="text-xs font-semibold text-paper truncate">{displayName(c.partner)}</p>
                       <span className="text-[10px] text-fog font-mono shrink-0">
                         {formatWhen(c.lastMessageAt)}
                       </span>
@@ -267,10 +369,19 @@ export default function MessagesPage() {
                 name={activePartner.username || activePartner.email}
                 size={32}
                 src={avatarSrc(activePartner.avatarUrl)}
+                status={isOnline(activePartner.id) ? 'online' : 'offline'}
               />
               <div>
-                <p className="text-xs font-bold text-paper">{activePartner.username}</p>
-                <p className="text-[10px] text-fog font-mono">{activePartner.email}</p>
+                <p className="text-xs font-bold text-paper">{displayName(activePartner)}</p>
+                <p className="text-[10px] font-mono">
+                  {partnerTyping ? (
+                    <span className="text-accent">typing…</span>
+                  ) : isOnline(activePartner.id) ? (
+                    <span className="text-completed">● online</span>
+                  ) : (
+                    <span className="text-fog">offline</span>
+                  )}
+                </p>
               </div>
             </div>
 
@@ -312,6 +423,15 @@ export default function MessagesPage() {
                   )
                 })
               )}
+              {(() => {
+                let lastMine = null
+                for (let i = thread.length - 1; i >= 0; i--) {
+                  if (thread[i].sender?.id === user?.id) { lastMine = thread[i]; break }
+                }
+                return lastMine?.read ? (
+                  <p className="text-[10px] text-fog font-mono text-right pr-1">Seen</p>
+                ) : null
+              })()}
               <div ref={bottomRef} />
             </div>
 
@@ -321,7 +441,10 @@ export default function MessagesPage() {
                 className="input-field flex-1 text-xs py-2.5"
                 placeholder="Write a message…"
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value)
+                  notifyTyping()
+                }}
               />
               <button
                 type="submit"

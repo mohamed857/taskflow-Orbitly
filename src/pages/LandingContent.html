@@ -1,0 +1,574 @@
+<title>Orbitly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Caveat:wght@600&display=swap">
+
+<style>
+  /* ===== Orbitly — warm, hand-crafted editorial world. Deliberate single (light) theme. ===== */
+  :root{
+    --paper:#FBF8F2;        /* warm ivory ground (clean, not beige-cliché) */
+    --paper-2:#F3EEE3;      /* warmer block */
+    --card:#FFFFFF;
+    --ink:#191512;          /* warm near-black */
+    --ink-2:#6A6156;        /* warm taupe secondary */
+    --line:#E7DFD0;         /* warm hairline */
+    --blue:#2F5DF2;         /* friendly cobalt (Orbitly, evolved) */
+    --blue-ink:#1E3FB0;
+    --gold:#F6A93B;         /* marigold */
+    --coral:#FB6A4A;        /* coral */
+    --plum:#7A5CF0;
+    --green:#2FA36B;
+    --f-head:"Alexandria","IBM Plex Sans Arabic",sans-serif;
+    --f-body:"IBM Plex Sans Arabic",system-ui,sans-serif;
+    --f-serif:"Fraunces",Georgia,serif;       /* latin wordmark / numerals */
+    --f-hand:"Caveat",cursive;                 /* latin micro-notes */
+    --sh:0 18px 40px -22px rgba(46,32,18,.35);
+    --sh-lift:0 26px 54px -20px rgba(46,32,18,.42);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; direction:rtl; text-align:right; background:var(--paper); color:var(--ink);
+    font-family:var(--f-body); font-size:17px; line-height:1.75; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    background-image:radial-gradient(60% 40% at 92% -6%, rgba(246,169,59,.14), transparent 60%),
+                     radial-gradient(48% 40% at -6% 12%, rgba(47,93,242,.08), transparent 60%);
+  }
+  body.en{direction:ltr; text-align:left}
+  /* bilingual visibility — Arabic is default, English shows when <body class="en"> */
+  .lang-en{display:none}
+  body.en .lang-ar{display:none}
+  body.en .lang-en{display:inline}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{font-family:var(--f-head); margin:0; line-height:1.14; font-weight:800; letter-spacing:-.01em; text-wrap:balance}
+  p{margin:0}
+  .wrap{max-width:1140px; margin-inline:auto; padding-inline:24px}
+  .serif{font-family:var(--f-serif)}
+  .eyebrow{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--f-head); font-weight:700; font-size:.8rem; letter-spacing:.02em; color:var(--blue-ink)}
+  .eyebrow .sq{width:9px; height:9px; border-radius:3px; background:var(--gold); transform:rotate(12deg)}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:.5rem; font-family:var(--f-head); font-weight:700;
+    font-size:.98rem; padding:.8rem 1.5rem; border-radius:14px; cursor:pointer; border:2px solid var(--ink); white-space:nowrap;
+    transition:transform .12s ease, box-shadow .18s ease, background .18s}
+  .btn-primary{background:var(--blue); color:#fff; border-color:var(--ink); box-shadow:4px 4px 0 var(--ink)}
+  .btn-primary:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink)}
+  .btn-primary:active{transform:translate(0,0); box-shadow:2px 2px 0 var(--ink)}
+  .btn-plain{background:transparent; color:var(--ink); border-color:transparent; padding-inline:.4rem}
+  .btn-plain:hover{color:var(--blue-ink)}
+  .btn-outline{background:var(--card); color:var(--ink); border-color:var(--ink); box-shadow:4px 4px 0 var(--gold)}
+  .btn-outline:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--gold)}
+  .lang-btn{font-family:var(--f-head); font-weight:800; font-size:.82rem; letter-spacing:.03em; border:2px solid var(--ink);
+    background:var(--card); color:var(--ink); border-radius:11px; padding:.5rem .8rem; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .12s ease, box-shadow .18s ease}
+  .lang-btn:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink)}
+  :focus-visible{outline:3px solid var(--blue); outline-offset:3px; border-radius:8px}
+
+  /* highlighter behind a word */
+  .hl{position:relative; white-space:nowrap; z-index:0}
+  .hl > svg{position:absolute; inset-inline-start:-6px; bottom:.02em; width:calc(100% + 12px); height:.66em; z-index:-1; color:var(--gold)}
+  .wavy{position:relative; white-space:nowrap}
+  .wavy > svg{position:absolute; inset-inline-start:-2px; bottom:-.28em; width:calc(100% + 4px); height:.4em; color:var(--coral)}
+
+  /* ===== nav ===== */
+  header.nav{position:sticky; top:0; z-index:50; background:color-mix(in srgb,var(--paper) 86%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+  .nav-in{display:flex; align-items:center; justify-content:space-between; height:70px}
+  .brand{display:flex; align-items:center; gap:.55rem; font-weight:600; font-size:1.4rem; font-family:var(--f-serif); font-style:italic}
+  .brand .mark{width:30px; height:30px; color:var(--blue); flex:none}
+  .nav-links{display:flex; gap:1.8rem}
+  .nav-links a{color:var(--ink-2); font-family:var(--f-head); font-weight:600; font-size:.9rem; transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-actions{display:flex; align-items:center; gap:.7rem}
+  .menu-btn{display:none; width:42px; height:42px; border-radius:12px; border:2px solid var(--ink); background:var(--card); align-items:center; justify-content:center; cursor:pointer}
+  @media (max-width:900px){
+    .nav-links{display:none}
+    .menu-btn{display:inline-flex}
+    .nav-links.open{display:flex; position:absolute; inset-inline:16px; top:76px; flex-direction:column; gap:.2rem; background:var(--card); border:2px solid var(--ink); border-radius:16px; padding:10px; box-shadow:var(--sh)}
+    .nav-links.open a{padding:.7rem .8rem; border-radius:10px}
+    .nav-actions .btn-plain{display:none}
+  }
+
+  /* ===== hero ===== */
+  .hero{padding:clamp(40px,6vw,74px) 0 40px; position:relative}
+  .hero-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:52px; align-items:center}
+  @media (max-width:960px){.hero-grid{grid-template-columns:1fr; gap:44px}}
+  .hero h1{font-size:clamp(2.4rem,6vw,4.1rem); font-weight:800; line-height:1.08; margin:1.1rem 0}
+  .hero .lead{color:var(--ink-2); font-size:clamp(1.05rem,1.7vw,1.22rem); max-width:31em; line-height:1.7}
+  .hero-cta{display:flex; flex-wrap:wrap; align-items:center; gap:1rem; margin-top:1.9rem}
+  .note-hand{font-family:var(--f-hand); font-size:1.35rem; color:var(--coral); transform:rotate(-4deg)}
+  .assur{display:flex; gap:1.3rem; flex-wrap:wrap; margin-top:1.7rem; color:var(--ink-2); font-size:.9rem; font-family:var(--f-head); font-weight:600}
+  .assur span.item{display:inline-flex; align-items:center; gap:.45rem}
+  .assur svg{color:var(--green)}
+
+  /* product peek card (taped, tilted) */
+  .peek-wrap{position:relative}
+  .peek{position:relative; background:var(--card); border:2px solid var(--ink); border-radius:22px; box-shadow:var(--sh-lift); padding:18px; transform:rotate(-2.2deg); transition:transform .3s ease}
+  .peek-wrap:hover .peek{transform:rotate(-1deg)}
+  .tape{position:absolute; width:104px; height:30px; background:rgba(246,169,59,.55); border:1px dashed rgba(25,21,18,.25); z-index:3}
+  .tape.t1{inset-block-start:-14px; inset-inline-start:26px; transform:rotate(-7deg)}
+  .tape.t2{inset-block-start:-12px; inset-inline-end:34px; transform:rotate(6deg); background:rgba(47,93,242,.28)}
+  .peek h4{font-family:var(--f-head); font-weight:700; font-size:.95rem; margin-bottom:12px; display:flex; align-items:center; gap:.5rem}
+  .peek h4 .dot3{display:flex; gap:5px; margin-inline-start:auto}
+  .peek h4 .dot3 i{width:10px; height:10px; border-radius:50%; border:1.5px solid var(--ink)}
+  .peek h4 .dot3 i:nth-child(1){background:var(--coral)} .peek h4 .dot3 i:nth-child(2){background:var(--gold)} .peek h4 .dot3 i:nth-child(3){background:var(--green)}
+  .trow{display:flex; align-items:center; gap:.7rem; padding:11px 12px; border:2px solid var(--ink); border-radius:14px; margin-bottom:10px; background:var(--paper)}
+  .trow .bar{width:5px; height:30px; border-radius:4px; flex:none}
+  .trow .tt{flex:1; font-weight:600; font-size:.9rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ava{width:26px; height:26px; border-radius:50%; border:2px solid var(--ink); display:grid; place-items:center; font-family:var(--f-head); font-weight:700; font-size:.72rem; color:#fff; flex:none}
+  .chip{font-family:var(--f-head); font-weight:700; font-size:.66rem; padding:.22rem .55rem; border-radius:8px; border:2px solid var(--ink); white-space:nowrap}
+  .c-blue{background:color-mix(in srgb,var(--blue) 18%,#fff); color:var(--blue-ink)}
+  .c-coral{background:color-mix(in srgb,var(--coral) 22%,#fff); color:#b23a20}
+  .c-green{background:color-mix(in srgb,var(--green) 20%,#fff); color:#1c6b45}
+  .c-gold{background:color-mix(in srgb,var(--gold) 30%,#fff); color:#96631a}
+  .doodle-arrow{position:absolute; z-index:4; inset-inline-start:-30px; inset-block-end:36px; width:120px; color:var(--ink); transform:rotate(4deg)}
+  .doodle-planet{position:absolute; z-index:2; inset-block-start:-46px; inset-inline-end:-18px; width:74px; color:var(--plum); animation:bob 5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-9px) rotate(-3deg)}}
+
+  /* ===== manifesto ===== */
+  .manifesto{padding:clamp(40px,6vw,66px) 0}
+  .manifesto p{font-family:var(--f-head); font-weight:800; font-size:clamp(1.6rem,4vw,2.7rem); line-height:1.28; max-width:16em}
+  .manifesto .m2{color:var(--ink-2)}
+
+  /* ===== section base ===== */
+  section{padding:clamp(52px,7vw,86px) 0; position:relative}
+  .sec-head{max-width:600px; margin-bottom:34px}
+  .sec-head h2{font-size:clamp(1.8rem,4vw,2.7rem); margin:.6rem 0 .5rem}
+  .sec-head p{color:var(--ink-2)}
+
+  /* ===== bento features (varied sizes, editorial) ===== */
+  .bento{display:grid; grid-template-columns:repeat(6,1fr); gap:16px}
+  .b{background:var(--card); border:2px solid var(--ink); border-radius:22px; padding:22px; box-shadow:var(--sh); position:relative; overflow:hidden}
+  .b h3{font-size:1.25rem; margin-bottom:.4rem}
+  .b p{color:var(--ink-2); font-size:.95rem}
+  .b .tagword{font-family:var(--f-hand); color:var(--coral); font-size:1.3rem; position:absolute; transform:rotate(-6deg)}
+  .b1{grid-column:span 4} .b2{grid-column:span 2} .b3{grid-column:span 2} .b4{grid-column:span 4}
+  @media (max-width:820px){.bento{grid-template-columns:1fr}.b1,.b2,.b3,.b4{grid-column:auto}}
+  /* mini board inside b1 */
+  .mini-board{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px}
+  .mcol{background:var(--paper); border:2px solid var(--ink); border-radius:14px; padding:9px}
+  .mcol .h{font-family:var(--f-head); font-weight:700; font-size:.7rem; color:var(--ink-2); margin-bottom:7px}
+  .mcard{background:#fff; border:2px solid var(--ink); border-radius:10px; padding:8px 9px; font-size:.75rem; font-weight:600; margin-bottom:7px; display:flex; align-items:center; gap:.4rem}
+  .mcard i{width:7px;height:7px;border-radius:50%;flex:none}
+  /* calendar strip in b4 */
+  .cal-strip{display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:16px}
+  .cday{border:2px solid var(--ink); border-radius:12px; padding:8px; background:var(--paper); text-align:center; font-family:var(--f-head); font-weight:700}
+  .cday .n{font-size:1rem} .cday .dt{height:5px; border-radius:3px; margin-top:6px; background:var(--line)}
+  .cday.on .dt{background:var(--blue)} .cday.hot .dt{background:var(--coral)} .cday.ok .dt{background:var(--green)}
+  /* avatars stack b2 */
+  .stack{display:flex; margin-top:16px}
+  .stack .ava{width:40px; height:40px; margin-inline-start:-12px; font-size:.9rem}
+  .stack .ava:first-child{margin-inline-start:0}
+  .rolechips{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
+  /* chat b3 */
+  .chatmini{margin-top:14px; display:flex; flex-direction:column; gap:8px}
+  .bub{max-width:82%; padding:8px 12px; border:2px solid var(--ink); border-radius:14px; font-size:.82rem; font-weight:500}
+  .bub.them{background:var(--paper); border-start-start-radius:4px}
+  .bub.me{background:color-mix(in srgb,var(--blue) 16%,#fff); margin-inline-start:auto; border-start-end-radius:4px}
+
+  /* ===== steps path ===== */
+  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:10px}
+  @media (max-width:820px){.steps{grid-template-columns:1fr}}
+  .st{position:relative}
+  .st .bignum{font-family:var(--f-serif); font-weight:600; font-size:3.4rem; line-height:1; color:var(--blue); font-style:italic}
+  .st h3{font-size:1.2rem; margin:.4rem 0 .4rem}
+  .st p{color:var(--ink-2); font-size:.95rem}
+  .st .conn{position:absolute; inset-block-start:26px; inset-inline-start:-14px; width:40px; color:var(--gold)}
+  @media (max-width:820px){.st .conn{display:none}}
+
+  /* ===== pricing ===== */
+  .pgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; align-items:stretch}
+  @media (max-width:980px){.pgrid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.pgrid{grid-template-columns:1fr}}
+  .plan{background:var(--card); border:2px solid var(--ink); border-radius:20px; padding:24px 22px; display:flex; flex-direction:column; box-shadow:var(--sh); position:relative}
+  .plan.pop{background:#141019; color:#fff; transform:translateY(-8px)}
+  .plan.pop .meta,.plan.pop li{color:#D9D2E6}
+  .plan.pop .tag{position:absolute; inset-block-start:-14px; inset-inline-start:22px; background:var(--gold); color:var(--ink); font-family:var(--f-head); font-weight:800; font-size:.7rem; padding:.3rem .7rem; border-radius:999px; border:2px solid var(--ink); transform:rotate(-3deg)}
+  .plan .name{font-family:var(--f-head); font-weight:800; font-size:1.25rem}
+  .plan .price{margin:.7rem 0 .1rem; display:flex; align-items:baseline; gap:.3rem}
+  .plan .price .amt{font-family:var(--f-serif); font-weight:600; font-size:2.4rem; letter-spacing:-.02em}
+  .plan .price .per{color:var(--ink-2); font-size:.78rem}
+  .plan.pop .price .per{color:#B9B1C9}
+  .plan .meta{color:var(--ink-2); font-size:.86rem; min-height:2.6em}
+  .plan ul{list-style:none; margin:16px 0 20px; padding:0; display:flex; flex-direction:column; gap:.6rem}
+  .plan li{display:flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:500}
+  .plan li svg{color:var(--blue); flex:none}
+  .plan.pop li svg{color:var(--gold)}
+  .plan .btn{margin-top:auto; width:100%}
+  .plan.pop .btn-outline{background:var(--gold); border-color:#000; box-shadow:4px 4px 0 #000; color:var(--ink)}
+  .price-note{text-align:center; color:var(--ink-2); font-size:.86rem; margin-top:16px}
+  .price-note .hl{font-weight:700}
+
+  /* ===== founder note ===== */
+  .founder{background:var(--paper-2); border-block:2px solid var(--ink)}
+  .founder-in{display:grid; grid-template-columns:auto 1fr; gap:26px; align-items:start; max-width:820px; margin-inline:auto}
+  @media (max-width:640px){.founder-in{grid-template-columns:1fr}}
+  .stamp{width:88px; height:88px; border-radius:50%; border:2px solid var(--ink); display:grid; place-items:center; background:var(--gold); color:var(--ink); font-family:var(--f-serif); font-style:italic; font-weight:600; font-size:1.5rem; box-shadow:var(--sh); transform:rotate(-6deg)}
+  .founder blockquote{font-family:var(--f-head); font-weight:600; font-size:clamp(1.2rem,2.4vw,1.55rem); line-height:1.6; margin:0}
+  .founder .sig{font-family:var(--f-hand); font-size:1.9rem; color:var(--blue-ink); margin-top:.6rem}
+  .founder .who{color:var(--ink-2); font-size:.9rem; font-family:var(--f-head); font-weight:600}
+
+  /* ===== faq ===== */
+  .faq{max-width:760px; margin-inline:auto; display:flex; flex-direction:column; gap:12px}
+  details{background:var(--card); border:2px solid var(--ink); border-radius:16px; padding:2px 20px; box-shadow:var(--sh)}
+  summary{list-style:none; cursor:pointer; padding:17px 0; font-family:var(--f-head); font-weight:700; font-size:1.02rem; display:flex; align-items:center; justify-content:space-between; gap:1rem}
+  summary::-webkit-details-marker{display:none}
+  summary .x{color:var(--blue); font-family:var(--f-serif); font-size:1.5rem; line-height:1; transition:transform .2s; flex:none}
+  details[open] summary .x{transform:rotate(45deg)}
+  details p{color:var(--ink-2); font-size:.95rem; padding:0 0 17px}
+
+  /* ===== final ===== */
+  .final{background:var(--blue); color:#fff; border:2px solid var(--ink); border-radius:28px; padding:clamp(40px,6vw,72px); text-align:center; box-shadow:var(--sh-lift); position:relative; overflow:hidden}
+  .final h2{color:#fff; font-size:clamp(1.9rem,4.4vw,3rem); margin-bottom:.7rem}
+  .final p{color:#DCE4FF; max-width:32em; margin:0 auto 1.8rem; font-size:1.05rem}
+  .final .btn-outline{background:#fff; border-color:#000; box-shadow:5px 5px 0 #0d0d0d}
+  .final .planet-bg{position:absolute; inset-inline-end:-40px; inset-block-start:-40px; width:190px; color:rgba(255,255,255,.14)}
+
+  footer{padding:44px 0}
+  .foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px}
+  .foot .links{display:flex; gap:1.4rem; flex-wrap:wrap}
+  .foot .links a{color:var(--ink-2); font-family:var(--f-head); font-weight:600; font-size:.9rem}
+  .foot .links a:hover{color:var(--blue-ink)}
+  .copy{color:var(--ink-2); font-size:.86rem; font-family:var(--f-head); font-weight:600}
+
+  /* ===== phones — keep everything tidy and edge-safe ===== */
+  @media (max-width:600px){
+    body{font-size:16px}
+    .wrap{padding-inline:16px}
+    .nav-in{height:60px}
+    .brand{font-size:1.18rem}
+    .brand .mark{width:26px; height:26px}
+    .nav-actions{gap:.4rem}
+    .btn{padding:.62rem 1rem; font-size:.9rem; border-radius:12px}
+    .lang-btn{padding:.42rem .6rem; font-size:.78rem}
+    .hero{padding-top:24px}
+    .hero-cta{gap:.7rem; margin-top:1.4rem}
+    .note-hand{font-size:1.15rem}
+    .assur{gap:.8rem 1.1rem; margin-top:1.2rem}
+    .peek{padding:14px; border-radius:18px}
+    .trow{padding:9px 10px; gap:.5rem}
+    .trow .tt{font-size:.82rem}
+    .doodle-planet{width:52px; inset-block-start:-30px; inset-inline-end:-6px}
+    .doodle-arrow{width:92px; inset-inline-start:-14px; inset-block-end:24px}
+    .manifesto p{font-size:1.5rem}
+    .sec-head{margin-bottom:24px}
+    .bento{gap:12px}
+    .b{padding:18px; border-radius:18px}
+    .plan{padding:20px 18px}
+    .founder-in{gap:18px}
+    .stamp{width:70px; height:70px; font-size:1.25rem}
+    .final{padding:34px 20px; border-radius:22px}
+    footer .foot{flex-direction:column; align-items:flex-start; gap:12px}
+  }
+
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1; transform:none}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; scroll-behavior:auto}.reveal{opacity:1; transform:none; transition:none}.peek{transform:rotate(-2.2deg) !important}}
+</style>
+
+<!-- nav -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><ellipse cx="16" cy="16" rx="13" ry="6.5" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="5.5" fill="currentColor"/><circle cx="26.5" cy="8.5" r="2.6" fill="currentColor"/></svg>
+      Orbitly
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a href="#features"><span class="lang-ar">المميزات</span><span class="lang-en">Features</span></a>
+      <a href="#how"><span class="lang-ar">إزاي بتبدأ</span><span class="lang-en">How it works</span></a>
+      <a href="#pricing"><span class="lang-ar">الأسعار</span><span class="lang-en">Pricing</span></a>
+      <a href="#faq"><span class="lang-ar">أسئلة</span><span class="lang-en">FAQ</span></a>
+    </nav>
+    <div class="nav-actions">
+      <button class="lang-btn" id="lang" type="button" aria-label="Switch language"><span class="lang-ar">EN</span><span class="lang-en">ع</span></button>
+      <a href="/login" target="_top" class="btn btn-plain"><span class="lang-ar">تسجيل الدخول</span><span class="lang-en">Log in</span></a>
+      <a href="/register-company" target="_top" class="btn btn-primary"><span class="lang-ar">جرّبه مجاناً</span><span class="lang-en">Try it free</span></a>
+      <button class="menu-btn" id="menu" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<span id="top"></span>
+
+<!-- hero -->
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="eyebrow"><span class="sq"></span> <span class="lang-ar">إدارة مهام لفريقك — من غير صداع</span><span class="lang-en">Task management for your team — headache-free</span></span>
+      <h1>
+        <span class="lang-ar">شغل فريقك كله في مكان واحد
+          <span class="hl">مرتّب<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><path d="M6 26 C 40 12, 120 12, 194 22 C 150 30, 60 32, 6 26 Z" fill="currentColor" opacity=".55"/></svg></span>
+          وواضح.</span>
+        <span class="lang-en">Your team's work, all in one
+          <span class="hl">place<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><path d="M6 26 C 40 12, 120 12, 194 22 C 150 30, 60 32, 6 26 Z" fill="currentColor" opacity=".55"/></svg></span>
+          — organized.</span>
+      </h1>
+      <p class="lead">
+        <span class="lang-ar">بلاش شيتات ومجموعات واتساب متفرقة. Orbitly بيجمع المهام، الفِرق، التقويم والمحادثات في لوحة واحدة بسيطة — تعرف منها مين بيعمل إيه، وإيه المتأخر، من غير لخبطة.</span>
+        <span class="lang-en">No more scattered spreadsheets and WhatsApp groups. Orbitly brings tasks, teams, calendar and chat into one simple board — so you know who's doing what and what's overdue, without the mess.</span>
+      </p>
+      <div class="hero-cta">
+        <a href="/register-company" target="_top" class="btn btn-primary"><span class="lang-ar">ابدأ مجاناً</span><span class="lang-en">Start free</span></a>
+        <span class="note-hand"><span class="lang-ar">مجاني تماماً للبداية ✦</span><span class="lang-en">Totally free to start ✦</span></span>
+      </div>
+      <div class="assur">
+        <span class="item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">من غير بطاقة</span><span class="lang-en">No card needed</span></span>
+        <span class="item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">جاهز في دقيقة</span><span class="lang-en">Ready in a minute</span></span>
+        <span class="item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">عربي بالكامل</span><span class="lang-en">Arabic &amp; English</span></span>
+      </div>
+    </div>
+
+    <div class="reveal peek-wrap" style="transition-delay:.08s">
+      <svg class="doodle-planet" viewBox="0 0 64 64" fill="none" aria-hidden="true"><ellipse cx="32" cy="32" rx="26" ry="11" transform="rotate(-24 32 32)" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="12" fill="currentColor"/></svg>
+      <div class="peek">
+        <span class="tape t1"></span><span class="tape t2"></span>
+        <h4><span class="lang-ar">لوحة الفريق</span><span class="lang-en">Team board</span> <span class="dot3"><i></i><i></i><i></i></span></h4>
+        <div class="trow"><span class="bar" style="background:var(--coral)"></span><span class="tt"><span class="lang-ar">تصميم صفحة الهبوط الجديدة</span><span class="lang-en">Design the new landing page</span></span><span class="ava" style="background:var(--blue)"><span class="lang-ar">م</span><span class="lang-en">M</span></span><span class="chip c-coral"><span class="lang-ar">متأخر</span><span class="lang-en">Overdue</span></span></div>
+        <div class="trow"><span class="bar" style="background:var(--blue)"></span><span class="tt"><span class="lang-ar">مراجعة عرض العميل</span><span class="lang-en">Review client proposal</span></span><span class="ava" style="background:var(--green)"><span class="lang-ar">ك</span><span class="lang-en">K</span></span><span class="chip c-blue"><span class="lang-ar">جاري</span><span class="lang-en">In progress</span></span></div>
+        <div class="trow"><span class="bar" style="background:var(--gold)"></span><span class="tt"><span class="lang-ar">تجهيز خطة الشهر</span><span class="lang-en">Prep this month's plan</span></span><span class="ava" style="background:var(--plum)"><span class="lang-ar">س</span><span class="lang-en">S</span></span><span class="chip c-gold"><span class="lang-ar">في الانتظار</span><span class="lang-en">To do</span></span></div>
+        <div class="trow"><span class="bar" style="background:var(--green)"></span><span class="tt"><span class="lang-ar">إطلاق النسخة 2.1</span><span class="lang-en">Ship v2.1</span></span><span class="ava" style="background:var(--coral)"><span class="lang-ar">ع</span><span class="lang-en">A</span></span><span class="chip c-green"><span class="lang-ar">تم ✓</span><span class="lang-en">Done ✓</span></span></div>
+      </div>
+      <svg class="doodle-arrow" viewBox="0 0 120 60" fill="none" aria-hidden="true"><path d="M4 8 C 30 2, 44 40, 96 44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M84 34 L98 46 L82 52" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- manifesto -->
+<div class="manifesto">
+  <div class="wrap reveal">
+    <p>
+      <span class="lang-ar">شغل الفريق مش لازم يبقى <span class="wavy">فوضى<svg viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 6 Q 15 0, 30 6 T 60 6 T 90 6 T 118 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>.
+      <span class="m2">إحنا عملنا Orbitly عشان كل حاجة تبقى في مكانها — وإنت تركّز على الشغل نفسه، مش على تنظيمه.</span></span>
+      <span class="lang-en">Team work doesn't have to be <span class="wavy">chaos<svg viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 6 Q 15 0, 30 6 T 60 6 T 90 6 T 118 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>.
+      <span class="m2">We built Orbitly so everything has its place — and you focus on the work itself, not on organizing it.</span></span>
+    </p>
+  </div>
+</div>
+
+<!-- features bento -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="sq"></span> <span class="lang-ar">كل اللي محتاجه</span><span class="lang-en">Everything you need</span></span>
+      <h2><span class="lang-ar">أدوات بسيطة، بتشتغل مع بعض</span><span class="lang-en">Simple tools that work together</span></h2>
+      <p><span class="lang-ar">مش مجرد قائمة مهام — منظومة كاملة تدير بيها شغل فريقك من الأول للآخر.</span><span class="lang-en">Not just a to-do list — a complete system to run your team's work end to end.</span></p>
+    </div>
+    <div class="bento">
+      <div class="b b1 reveal">
+        <h3><span class="lang-ar">لوحة بتتسحب بإيدك</span><span class="lang-en">A board you drag by hand</span></h3>
+        <p><span class="lang-ar">حرّك المهام بين الحالات، وحدّد الأولوية والمسؤول والميعاد — كل حاجة قدامك بوضوح.</span><span class="lang-en">Move tasks between states and set priority, owner and due date — everything clear in front of you.</span></p>
+        <div class="mini-board" aria-hidden="true">
+          <div class="mcol"><div class="h"><span class="lang-ar">في الانتظار</span><span class="lang-en">To do</span></div><div class="mcard"><i style="background:var(--gold)"></i> <span class="lang-ar">بحث المنافسين</span><span class="lang-en">Competitor research</span></div><div class="mcard"><i style="background:var(--blue)"></i> <span class="lang-ar">كتابة المحتوى</span><span class="lang-en">Write content</span></div></div>
+          <div class="mcol"><div class="h"><span class="lang-ar">جاري</span><span class="lang-en">In progress</span></div><div class="mcard"><i style="background:var(--coral)"></i> <span class="lang-ar">تصميم الواجهة</span><span class="lang-en">UI design</span></div><div class="mcard"><i style="background:var(--plum)"></i> <span class="lang-ar">مراجعة الكود</span><span class="lang-en">Code review</span></div></div>
+          <div class="mcol"><div class="h"><span class="lang-ar">تم</span><span class="lang-en">Done</span></div><div class="mcard"><i style="background:var(--green)"></i> <span class="lang-ar">إعداد الحساب</span><span class="lang-en">Account setup</span></div></div>
+        </div>
+      </div>
+
+      <div class="b b2 reveal" style="transition-delay:.05s">
+        <span class="tagword" style="inset-block-start:14px; inset-inline-start:16px"><span class="lang-ar">فريقك كله!</span><span class="lang-en">Your whole team!</span></span>
+        <h3 style="margin-top:26px"><span class="lang-ar">فِرق وأدوار</span><span class="lang-en">Teams &amp; roles</span></h3>
+        <p><span class="lang-ar">Admin وManager وTeam Lead — وكل شركة في مساحتها.</span><span class="lang-en">Admin, Manager, Team Lead — and every company in its own space.</span></p>
+        <div class="stack" aria-hidden="true">
+          <span class="ava" style="background:var(--blue)"><span class="lang-ar">ع</span><span class="lang-en">A</span></span><span class="ava" style="background:var(--green)"><span class="lang-ar">م</span><span class="lang-en">M</span></span><span class="ava" style="background:var(--gold)"><span class="lang-ar">ك</span><span class="lang-en">K</span></span><span class="ava" style="background:var(--coral)"><span class="lang-ar">س</span><span class="lang-en">S</span></span><span class="ava" style="background:var(--plum)"><span class="lang-ar">+٩</span><span class="lang-en">+9</span></span>
+        </div>
+        <div class="rolechips">
+          <span class="chip c-blue">Admin</span><span class="chip c-green">Manager</span><span class="chip c-gold">Team Lead</span>
+        </div>
+      </div>
+
+      <div class="b b3 reveal" style="transition-delay:.1s">
+        <h3><span class="lang-ar">محادثات جوّه الشغل</span><span class="lang-en">Chat inside your work</span></h3>
+        <p><span class="lang-ar">كلّم أي حد في فريقك من غير ما تسيب التطبيق.</span><span class="lang-en">Message anyone on your team without leaving the app.</span></p>
+        <div class="chatmini" aria-hidden="true">
+          <span class="bub them"><span class="lang-ar">خلّصت التصميم ✅</span><span class="lang-en">Finished the design ✅</span></span>
+          <span class="bub me"><span class="lang-ar">تحفة! ننزّله بكرة 🚀</span><span class="lang-en">Awesome! Let's ship it tomorrow 🚀</span></span>
+        </div>
+      </div>
+
+      <div class="b b4 reveal" style="transition-delay:.05s">
+        <h3><span class="lang-ar">تقويم يوضّح أسبوعك</span><span class="lang-en">A calendar that maps your week</span></h3>
+        <p><span class="lang-ar">كل المواعيد النهائية قدامك — تعرف الضغط رايح فين قبل ما يوصل.</span><span class="lang-en">Every deadline in view — see where the pressure's heading before it lands.</span></p>
+        <div class="cal-strip" aria-hidden="true">
+          <div class="cday"><div class="n"><span class="lang-ar">١٢</span><span class="lang-en">12</span></div><div class="dt"></div></div>
+          <div class="cday ok"><div class="n"><span class="lang-ar">١٣</span><span class="lang-en">13</span></div><div class="dt"></div></div>
+          <div class="cday"><div class="n"><span class="lang-ar">١٤</span><span class="lang-en">14</span></div><div class="dt"></div></div>
+          <div class="cday hot"><div class="n"><span class="lang-ar">١٥</span><span class="lang-en">15</span></div><div class="dt"></div></div>
+          <div class="cday on"><div class="n"><span class="lang-ar">١٦</span><span class="lang-en">16</span></div><div class="dt"></div></div>
+          <div class="cday"><div class="n"><span class="lang-ar">١٧</span><span class="lang-en">17</span></div><div class="dt"></div></div>
+          <div class="cday ok"><div class="n"><span class="lang-ar">١٨</span><span class="lang-en">18</span></div><div class="dt"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- how -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="sq"></span> <span class="lang-ar">بسيطة جداً</span><span class="lang-en">Dead simple</span></span>
+      <h2><span class="lang-ar">٣ خطوات وتكون شغّال</span><span class="lang-en">3 steps and you're running</span></h2>
+      <p><span class="lang-ar">من غير تركيب، ولا سيرفر، ولا تعقيد.</span><span class="lang-en">No install, no server, no complexity.</span></p>
+    </div>
+    <div class="steps">
+      <div class="st reveal">
+        <div class="bignum">1</div>
+        <h3><span class="lang-ar">اعمل حساب شركتك</span><span class="lang-en">Create your company account</span></h3>
+        <p><span class="lang-ar">سجّل في دقيقة واختار باقتك — تقدر تبدأ مجاناً بالكامل.</span><span class="lang-en">Sign up in a minute and pick your plan — you can start completely free.</span></p>
+        <svg class="conn" viewBox="0 0 40 20" fill="none" aria-hidden="true"><path d="M38 10 C 24 2, 16 18, 2 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 6"/></svg>
+      </div>
+      <div class="st reveal" style="transition-delay:.06s">
+        <div class="bignum">2</div>
+        <h3><span class="lang-ar">ضيف فريقك</span><span class="lang-en">Add your team</span></h3>
+        <p><span class="lang-ar">ادعِ زمايلك، اعمل الفِرق، ووزّع المهام على كل واحد.</span><span class="lang-en">Invite your colleagues, create teams, and assign tasks to each person.</span></p>
+        <svg class="conn" viewBox="0 0 40 20" fill="none" aria-hidden="true"><path d="M38 10 C 24 2, 16 18, 2 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 6"/></svg>
+      </div>
+      <div class="st reveal" style="transition-delay:.12s">
+        <div class="bignum">3</div>
+        <h3><span class="lang-ar">تابع كل حاجة</span><span class="lang-en">Track everything</span></h3>
+        <p><span class="lang-ar">شوف التقدّم لحظة بلحظة — المتأخر والجاي قبل ما يفاجئك.</span><span class="lang-en">See progress in real time — overdue and upcoming before it surprises you.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- pricing -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="sec-head reveal" style="max-width:620px; margin-inline:auto; text-align:center">
+      <span class="eyebrow" style="justify-content:center"><span class="sq"></span> <span class="lang-ar">أسعار واضحة</span><span class="lang-en">Clear pricing</span></span>
+      <h2><span class="lang-ar">ابدأ مجاناً، وادفع وقت ما تكبر</span><span class="lang-en">Start free, pay as you grow</span></h2>
+      <p><span class="lang-ar">السعر لكل عضو في الشهر — وأرخص من المنافسين.</span><span class="lang-en">Price per member per month — and cheaper than the competition.</span></p>
+    </div>
+    <div class="pgrid">
+      <div class="plan reveal">
+        <div class="name">Free</div>
+        <div class="price"><span class="amt">$0</span></div>
+        <div class="meta"><span class="lang-ar">للبداية والفرق الصغيرة.</span><span class="lang-en">For starters and small teams.</span></div>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">٥ أعضاء</span><span class="lang-en">5 members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">فريق واحد</span><span class="lang-en">1 team</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">كل الأساسيات</span><span class="lang-en">All the essentials</span></li>
+        </ul>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">ابدأ مجاناً</span><span class="lang-en">Start free</span></a>
+      </div>
+      <div class="plan reveal" style="transition-delay:.05s">
+        <div class="name">Starter</div>
+        <div class="price"><span class="amt">$4</span><span class="per"><span class="lang-ar">/عضو/شهر</span><span class="lang-en">/member/mo</span></span></div>
+        <div class="meta"><span class="lang-ar">للفرق اللي بتكبر.</span><span class="lang-en">For growing teams.</span></div>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">١٥ عضو</span><span class="lang-en">15 members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">٣ فِرق</span><span class="lang-en">3 teams</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">محادثات وتحليلات</span><span class="lang-en">Chat &amp; analytics</span></li>
+        </ul>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">اختار Starter</span><span class="lang-en">Choose Starter</span></a>
+      </div>
+      <div class="plan pop reveal" style="transition-delay:.1s">
+        <span class="tag"><span class="lang-ar">الأكثر طلباً ✦</span><span class="lang-en">Most popular ✦</span></span>
+        <div class="name">Pro</div>
+        <div class="price"><span class="amt">$8</span><span class="per"><span class="lang-ar">/عضو/شهر</span><span class="lang-en">/member/mo</span></span></div>
+        <div class="meta"><span class="lang-ar">الاختيار المثالي للشركات النامية.</span><span class="lang-en">The ideal pick for growing companies.</span></div>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">٥٠ عضو</span><span class="lang-en">50 members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">١٥ فريق</span><span class="lang-en">15 teams</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">أولوية في الدعم</span><span class="lang-en">Priority support</span></li>
+        </ul>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">اختار Pro</span><span class="lang-en">Choose Pro</span></a>
+      </div>
+      <div class="plan reveal" style="transition-delay:.15s">
+        <div class="name">Business</div>
+        <div class="price"><span class="amt">$16</span><span class="per"><span class="lang-ar">/عضو/شهر</span><span class="lang-en">/member/mo</span></span></div>
+        <div class="meta"><span class="lang-ar">للمؤسسات بلا حدود.</span><span class="lang-en">For organizations, no limits.</span></div>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">أعضاء بلا حدود</span><span class="lang-en">Unlimited members</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">فِرق بلا حدود</span><span class="lang-en">Unlimited teams</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> <span class="lang-ar">كل مميزات Pro</span><span class="lang-en">Everything in Pro</span></li>
+        </ul>
+        <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">اختار Business</span><span class="lang-en">Choose Business</span></a>
+      </div>
+    </div>
+    <p class="price-note"><span class="lang-ar">كل الباقات المدفوعة <span class="hl">أرخص</span> من الباقة الأساسية عند أغلب المنافسين — وتقدر تغيّر باقتك في أي وقت.</span><span class="lang-en">Every paid plan is <span class="hl">cheaper</span> than most competitors' base plan — and you can switch anytime.</span></p>
+  </div>
+</section>
+
+<!-- founder note -->
+<section class="founder">
+  <div class="wrap founder-in reveal">
+    <div class="stamp">K</div>
+    <div>
+      <blockquote><span class="lang-ar">“عملنا Orbitly عشان إحنا بنفسنا اتعبنا من الشغل المتفرّق بين الشيتات والشاتات. حبينا نعمل حاجة بسيطة، عربية، وتريّح فريقك فعلاً — مش مجرد أداة تانية.”</span><span class="lang-en">"We built Orbitly because we ourselves got tired of work scattered across sheets and chats. We wanted something simple, Arabic-first, that actually gives your team relief — not just another tool."</span></blockquote>
+      <div class="sig"><span class="lang-ar">فريق Kvant</span><span class="lang-en">Team Kvant</span></div>
+      <div class="who"><span class="lang-ar">الفريق اللي بيبني Orbitly ✦ من مصر</span><span class="lang-en">The team building Orbitly ✦ from Egypt</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- faq -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal" style="max-width:620px; margin-inline:auto; text-align:center">
+      <span class="eyebrow" style="justify-content:center"><span class="sq"></span> <span class="lang-ar">أسئلة شائعة</span><span class="lang-en">FAQ</span></span>
+      <h2><span class="lang-ar">يمكن سؤالك هنا</span><span class="lang-en">Maybe your question's here</span></h2>
+    </div>
+    <div class="faq reveal">
+      <details open><summary><span><span class="lang-ar">فيه باقة مجانية فعلاً؟</span><span class="lang-en">Is there really a free plan?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">آه، باقة Free مجانية بالكامل ومن غير بطاقة، لحد ٥ أعضاء وفريق واحد بكل الأساسيات.</span><span class="lang-en">Yes — the Free plan is completely free, no card, up to 5 members and one team with all the essentials.</span></p></details>
+      <details><summary><span><span class="lang-ar">بياناتي مفصولة عن باقي الشركات؟</span><span class="lang-en">Is my data separate from other companies?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">طبعاً — كل شركة ليها مساحة عمل مستقلة تماماً، محدش يشوف بيانات حد تاني.</span><span class="lang-en">Absolutely — each company gets a fully isolated workspace; no one sees anyone else's data.</span></p></details>
+      <details><summary><span><span class="lang-ar">بيشتغل على الموبايل؟</span><span class="lang-en">Does it work on mobile?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">آه، متجاوب بالكامل على أي متصفح، موبايل أو لابتوب، من غير ما تنزّل حاجة.</span><span class="lang-en">Yes, fully responsive on any browser, phone or laptop, nothing to install.</span></p></details>
+      <details><summary><span><span class="lang-ar">محتاج تركيب أو خبرة تقنية؟</span><span class="lang-en">Do I need setup or technical skills?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">لأ خالص — تعمل حساب وتبدأ على طول، بأبسط شكل ممكن.</span><span class="lang-en">Not at all — create an account and start right away, as simple as it gets.</span></p></details>
+      <details><summary><span><span class="lang-ar">أقدر أغيّر باقتي بعدين؟</span><span class="lang-en">Can I change my plan later?</span></span> <span class="x">+</span></summary><p><span class="lang-ar">آه، ترقّي أو تنزّل في أي وقت حسب حجم فريقك.</span><span class="lang-en">Yes, upgrade or downgrade anytime based on your team size.</span></p></details>
+    </div>
+  </div>
+</section>
+
+<!-- final -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="final reveal">
+      <svg class="planet-bg" viewBox="0 0 64 64" fill="none" aria-hidden="true"><ellipse cx="32" cy="32" rx="26" ry="11" transform="rotate(-24 32 32)" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="12" fill="currentColor"/></svg>
+      <h2><span class="lang-ar">يلّا نظّم شغل فريقك</span><span class="lang-en">Let's organize your team's work</span></h2>
+      <p><span class="lang-ar">ابدأ مجاناً النهاردة — في دقيقة، ومن غير بطاقة. وخلّي كل مهمة في مكانها.</span><span class="lang-en">Start free today — in a minute, no card. And keep every task in its place.</span></p>
+      <a href="/register-company" target="_top" class="btn btn-outline"><span class="lang-ar">ابدأ مجاناً الآن</span><span class="lang-en">Start free now</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top"><svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><ellipse cx="16" cy="16" rx="13" ry="6.5" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="5.5" fill="currentColor"/><circle cx="26.5" cy="8.5" r="2.6" fill="currentColor"/></svg>Orbitly</a>
+    <div class="links"><a href="#features"><span class="lang-ar">المميزات</span><span class="lang-en">Features</span></a><a href="#pricing"><span class="lang-ar">الأسعار</span><span class="lang-en">Pricing</span></a><a href="#faq"><span class="lang-ar">الأسئلة</span><span class="lang-en">FAQ</span></a><a href="https://kvanthq.com" target="_blank" rel="noopener noreferrer"><span class="lang-ar">كفانت ↗</span><span class="lang-en">Kvant ↗</span></a></div>
+    <div class="copy">© Orbitly by <a href="https://kvanthq.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue-ink); text-decoration:underline; text-underline-offset:2px">Kvant</a></div>
+  </div>
+</footer>
+
+<script>
+  (function(){var m=document.getElementById('menu'),l=document.getElementById('navlinks');
+    m.addEventListener('click',function(){l.classList.toggle('open')});
+    l.addEventListener('click',function(e){if(e.target.closest('a'))l.classList.remove('open')});})();
+  // In-page anchor scrolling. This page is hosted inside a srcdoc iframe, where
+  // plain href="#id" links don't scroll (their base is about:srcdoc), so we
+  // handle same-page anchors manually with scrollIntoView.
+  (function(){
+    document.addEventListener('click',function(e){
+      var a=e.target.closest('a[href^="#"]');
+      if(!a) return;
+      var id=a.getAttribute('href').slice(1);
+      if(!id) return;
+      var el=document.getElementById(id);
+      if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    });
+  })();
+  (function(){
+    var btn=document.getElementById('lang');
+    function apply(lang){
+      var en = lang==='en';
+      document.body.classList.toggle('en', en);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = en ? 'ltr' : 'rtl';
+    }
+    btn.addEventListener('click',function(){
+      apply(document.body.classList.contains('en') ? 'ar' : 'en');
+    });
+  })();
+  (function(){var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver'in window)||matchMedia('(prefers-reduced-motion:reduce)').matches){els.forEach(function(e){e.classList.add('in')});return;}
+    var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}})},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+    els.forEach(function(e){io.observe(e)});})();
+</script>

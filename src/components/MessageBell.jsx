@@ -4,12 +4,13 @@ import { MessageCircle, Loader2, ArrowRight } from 'lucide-react'
 import { messages as messagesApi, avatarSrc } from '../api/client.js'
 import { useChatDock } from '../context/ChatDockContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { useRealtime } from '../context/RealtimeContext.jsx'
 import Avatar from './Avatar.jsx'
+import { parseServerDate } from '../utils/serverTime.js'
 
 function formatWhen(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseServerDate(dateStr)
+  if (!d) return ''
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
   if (diffMin < 1) return 'now'
   if (diffMin < 60) return `${diffMin}m`
@@ -22,6 +23,7 @@ export default function MessageBell() {
   const navigate = useNavigate()
   const { push } = useToast()
   const { openChat } = useChatDock()
+  const { subscribeMessages } = useRealtime()
   const [open, setOpen] = useState(false)
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(false)
@@ -47,6 +49,11 @@ export default function MessageBell() {
       clearInterval(interval)
     }
   }, [])
+
+  // Live: bump the unread badge when a new message arrives over WebSocket.
+  useEffect(() => {
+    return subscribeMessages(() => setUnread((c) => c + 1))
+  }, [subscribeMessages])
 
   // Fetch conversations on popover open
   useEffect(() => {
@@ -112,7 +119,14 @@ export default function MessageBell() {
       {/* Trigger Button */}
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          // On phones the dropdown doesn't fit — open the full Messages page.
+          if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) {
+            navigate('/messages')
+            return
+          }
+          setOpen((v) => !v)
+        }}
         className="relative text-fog hover:text-paper rounded-lg p-2 hover:bg-panelAlt/60 transition-colors focus:outline-none focus:ring-1 focus:ring-accent/50 cursor-pointer"
         aria-label="Messages"
         aria-expanded={open}
@@ -127,7 +141,7 @@ export default function MessageBell() {
 
       {/* Popover Menu */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-84 glass-panel rounded-xl border border-panelBorder/80 z-50 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-1.5rem))] sm:w-80 glass-panel rounded-xl border border-panelBorder/80 z-50 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Header */}
           <div className="flex items-center justify-between px-3.5 py-2.5 bg-panel/60 border-b border-panelBorder/60">
             <span className="label-eyebrow font-display tracking-wider">Messages</span>
@@ -157,7 +171,7 @@ export default function MessageBell() {
               </div>
             ) : (
               conversations.map((c) => {
-                const partnerName = c.partner?.username || c.partner?.email || 'User'
+                const partnerName = c.partner?.name || c.partner?.username || c.partner?.email || 'User'
                 const hasUnread = c.unreadCount > 0
 
                 return (

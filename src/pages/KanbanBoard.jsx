@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { tasks as tasksApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
+import LabelChips from '../components/LabelChips.jsx'
 import TaskDetailModal from '../components/TaskDetailModal.jsx'
 import PriorityBadge from '../components/PriorityBadge.jsx'
 import { STATUS_OPTIONS } from '../components/StatusChip.jsx'
@@ -57,16 +60,18 @@ function Card({ task, draggable, onDragStart, dragging, onOpen }) {
           </span>
         </div>
 
+        <LabelChips labels={task.labels} />
+
         <div className="flex items-center justify-between text-xs pt-1 border-t border-panelBorder/30">
           {task.assignee ? (
             <div className="flex items-center gap-1.5 min-w-0">
               <Avatar
-                name={task.assignee.username || task.assignee.email}
+                name={displayName(task.assignee)}
                 size={18}
                 src={avatarSrc(task.assignee.avatarUrl)}
               />
               <span className="text-[11px] text-fog font-medium truncate max-w-[100px]">
-                {task.assignee.username || task.assignee.email}
+                {displayName(task.assignee)}
               </span>
             </div>
           ) : (
@@ -133,6 +138,16 @@ export default function KanbanBoard() {
       isSubscribed.current = false
     }
   }, [load])
+
+  // Refresh when the backend's overdue sweep fires (signalled via Layout).
+  const sweepSignal = useOutletContext()?.sweepSignal ?? 0
+  const prevSweepRef = useRef(sweepSignal)
+  useEffect(() => {
+    if (sweepSignal > 0 && sweepSignal !== prevSweepRef.current) {
+      prevSweepRef.current = sweepSignal
+      load()
+    }
+  }, [sweepSignal, load])
 
   const canDrag = (task) =>
     isWorkspaceView || isTeamLead || user?.id === task.reporter?.id || user?.id === task.assignee?.id

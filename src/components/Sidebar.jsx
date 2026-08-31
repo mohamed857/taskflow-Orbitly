@@ -9,45 +9,52 @@ import {
   ListTree,
   Users,
   Building2,
-  Users2,
+  Network,
   UserCircle,
+  CreditCard,
+  ShieldAlert,
   X,
   Cpu
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useI18n } from '../context/LanguageContext.jsx'
+import Logo from './Logo.jsx'
 
 const NAV_SECTIONS = [
   {
-    title: 'Overview',
+    tkey: 'section.overview',
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-      { to: '/board', label: 'Board', icon: Kanban },
-      { to: '/calendar', label: 'Calendar', icon: CalendarDays },
-      { to: '/messages', label: 'Messages', icon: MessageCircle }
+      { to: '/', tkey: 'nav.dashboard', icon: LayoutDashboard, end: true },
+      { to: '/board', tkey: 'nav.board', icon: Kanban },
+      { to: '/calendar', tkey: 'nav.calendar', icon: CalendarDays },
+      { to: '/messages', tkey: 'nav.messages', icon: MessageCircle }
     ]
   },
   {
-    title: 'Tasks',
+    tkey: 'section.tasks',
     items: [
-      { to: '/tasks/mine', label: 'My Tasks', icon: ListChecks },
-      { to: '/tasks/assigned', label: 'Assigned to Me', icon: UserCheck },
-      { to: '/tasks/team', label: 'Team Tasks', icon: ListTree, roles: ['TEAM_LEAD'] },
-      { to: '/tasks/workspace', label: 'Workspace Tasks', icon: ListTree, roles: ['ADMIN', 'MANAGER'] }
+      { to: '/tasks/mine', tkey: 'nav.myTasks', icon: ListChecks },
+      { to: '/tasks/assigned', tkey: 'nav.assigned', icon: UserCheck },
+      { to: '/tasks/team', tkey: 'nav.teamTasks', icon: ListTree, roles: ['TEAM_LEAD'] },
+      { to: '/tasks/workspace', tkey: 'nav.workspaceTasks', icon: ListTree, roles: ['ADMIN', 'MANAGER'] }
     ]
   },
   {
-    title: 'Workspace',
+    tkey: 'section.workspace',
     items: [
-      { to: '/users', label: 'Team', icon: Users },
-      { to: '/teams', label: 'Teams', icon: Users2 },
-      { to: '/workspaces', label: 'Workspace', icon: Building2 },
-      { to: '/profile', label: 'Profile', icon: UserCircle }
+      { to: '/users', tkey: 'nav.team', icon: Users },
+      { to: '/teams', tkey: 'nav.teams', icon: Network },
+      { to: '/workspaces', tkey: 'nav.workspace', icon: Building2 },
+      { to: '/subscription', tkey: 'nav.subscription', icon: CreditCard, roles: ['ADMIN', 'MANAGER'] },
+      { to: '/console', tkey: 'nav.console', icon: ShieldAlert, roles: ['SUPER_ADMIN'] },
+      { to: '/profile', tkey: 'nav.profile', icon: UserCircle }
     ]
   }
 ]
 
 export default function Sidebar({ open, onClose }) {
   const { hasRole } = useAuth()
+  const { t } = useI18n()
 
   return (
     <>
@@ -69,9 +76,9 @@ export default function Sidebar({ open, onClose }) {
         {/* Brand Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-panelBorder/40">
           <div className="flex items-center gap-2.5">
-            <span className="status-dot-pulse" />
+            <Logo size={24} className="text-accent shrink-0" animated />
             <span className="font-display font-bold text-xl tracking-tight text-gradient-animated">
-              TaskFlow
+              Orbitly
             </span>
           </div>
           <button
@@ -93,12 +100,12 @@ export default function Sidebar({ open, onClose }) {
             if (visibleItems.length === 0) return null
 
             return (
-              <div key={section.title} className="space-y-1">
+              <div key={section.tkey} className="space-y-1">
                 <p className="px-3 text-[10px] uppercase font-mono tracking-wider text-fog/60 font-semibold mb-2">
-                  {section.title}
+                  {t(section.tkey)}
                 </p>
 
-                {visibleItems.map(({ to, label, icon: Icon, end }) => (
+                {visibleItems.map(({ to, tkey, icon: Icon, end }) => (
                   <NavLink
                     key={to}
                     to={to}
@@ -120,7 +127,7 @@ export default function Sidebar({ open, onClose }) {
                             isActive ? 'text-accent' : 'text-fog group-hover:text-paper'
                           }`}
                         />
-                        <span className="truncate">{label}</span>
+                        <span className="truncate">{t(tkey)}</span>
                         {isActive && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-accent rounded-r-full shadow-sm" />
                         )}
@@ -139,7 +146,7 @@ export default function Sidebar({ open, onClose }) {
             <Cpu size={14} className="text-accent shrink-0" />
             <span className="label-eyebrow text-[10px]">system status</span>
           </div>
-          <p className="text-[11px] text-fog font-mono">overdue sweep every ~250s</p>
+          <p className="text-[11px] text-fog font-mono">overdue sweep every ~24h</p>
         </div>
       </aside>
     </>

@@ -7,7 +7,11 @@ import StatusChip from './StatusChip.jsx'
 import PriorityBadge from './PriorityBadge.jsx'
 import Avatar from './Avatar.jsx'
 import { avatarSrc } from '../api/client.js'
+import { displayName } from '../utils/userDisplay.js'
+import LabelChips from './LabelChips.jsx'
+import AttachmentSection from './AttachmentSection.jsx'
 import CommentThread from './CommentThread.jsx'
+import ActivityTimeline from './ActivityTimeline.jsx'
 import TaskForm from './TaskForm.jsx'
 import Portal from './Portal.jsx'
 
@@ -34,12 +38,12 @@ function PersonRow({ label, person }) {
       {person ? (
         <div className="flex items-center gap-2 min-w-0 truncate">
           <Avatar
-            name={person.username || person.email}
+            name={displayName(person)}
             size={22}
             src={avatarSrc(person.avatarUrl)}
           />
           <span className="text-paper truncate font-semibold text-xs">
-            {person.username || person.email}
+            {displayName(person)}
           </span>
         </div>
       ) : (
@@ -57,9 +61,31 @@ export default function TaskDetailModal({ task, onClose }) {
   const [loadingSubtasks, setLoadingSubtasks] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [users, setUsers] = useState([])
+  const [loadingParent, setLoadingParent] = useState(false)
 
   const canManage = hasRole('ADMIN', 'MANAGER', 'TEAM_LEAD')
   const isSubtask = Boolean(viewedTask?.parentTaskId)
+
+  // Navigate up to the parent task. Works whether the subtask was opened from
+  // its parent (in which case `task` is the parent) or directly on its own —
+  // in the latter case we fetch the parent by id.
+  const goToParent = async () => {
+    const parentId = viewedTask?.parentTaskId
+    if (!parentId) return
+    if (task && task.id === parentId) {
+      setViewedTask(task)
+      return
+    }
+    setLoadingParent(true)
+    try {
+      const parent = await tasksApi.get(parentId)
+      setViewedTask(parent)
+    } catch (err) {
+      push(err.message || 'Could not open the parent task.', 'error')
+    } finally {
+      setLoadingParent(false)
+    }
+  }
 
   useEffect(() => {
     setViewedTask(task)
@@ -128,9 +154,10 @@ useEffect(() => {
       const created = await tasksApi.create({ ...payload, parentTaskId: viewedTask.id })
       setSubtasks((cur) => [...cur, created])
       push('Sub-task created successfully.', 'success')
-      setFormOpen(false)
+      return created
     } catch (err) {
       push(err.message || 'Failed to create sub-task.', 'error')
+      throw err // keep the sub-task drawer open on failure
     }
   }
 
@@ -157,10 +184,11 @@ useEffect(() => {
             {isSubtask && (
               <button
                 type="button"
-                onClick={() => setViewedTask(task)}
-                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-mono transition-colors cursor-pointer"
+                onClick={goToParent}
+                disabled={loadingParent}
+                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-mono transition-colors cursor-pointer disabled:opacity-60"
               >
-                <ArrowLeft size={13} /> back to parent task
+                <ArrowLeft size={13} /> {loadingParent ? 'opening parent…' : 'back to parent task'}
               </button>
             )}
 
@@ -195,6 +223,8 @@ useEffect(() => {
                 </span>
               </div>
             </div>
+
+            <LabelChips labels={viewedTask.labels} />
           </div>
 
           {/* Scrollable Content Body */}
@@ -261,9 +291,19 @@ useEffect(() => {
               </div>
             )}
 
+            {/* Attachments */}
+            <div className="pt-4 border-t border-panelBorder/80">
+              <AttachmentSection taskId={viewedTask.id} task={viewedTask} />
+            </div>
+
             {/* Comments Thread */}
             <div className="pt-4 border-t border-panelBorder/80">
               <CommentThread taskId={viewedTask.id} />
+            </div>
+
+            {/* Activity Timeline */}
+            <div className="pt-4 border-t border-panelBorder/80">
+              <ActivityTimeline taskId={viewedTask.id} />
             </div>
           </div>
         </div>

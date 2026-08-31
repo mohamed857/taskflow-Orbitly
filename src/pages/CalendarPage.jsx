@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Loader2 } from 'lucide-react'
 import { tasks as tasksApi, users as usersApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -32,6 +33,18 @@ function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
+// Build a new due date on `dayDate`, keeping the task's original time of day.
+// Returns the LocalDateTime string the backend expects (yyyy-MM-ddTHH:mm:ss).
+function moveDueDateToDay(originalDue, dayDate) {
+  const orig = originalDue ? new Date(originalDue) : null
+  const valid = orig && !Number.isNaN(orig.getTime())
+  const h = valid ? orig.getHours() : 17
+  const m = valid ? orig.getMinutes() : 0
+  const s = valid ? orig.getSeconds() : 0
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${dayDate.getFullYear()}-${pad(dayDate.getMonth() + 1)}-${pad(dayDate.getDate())}T${pad(h)}:${pad(m)}:${pad(s)}`
+}
+
 export default function CalendarPage() {
   const { hasRole } = useAuth()
   const { push } = useToast()
@@ -44,6 +57,9 @@ export default function CalendarPage() {
   const [openTask, setOpenTask] = useState(null)
   const [users, setUsers] = useState([])
   const [formDate, setFormDate] = useState(null)
+  const draggingRef = useRef(null)
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOverKey, setDragOverKey] = useState(null)
 
   const canManage = hasRole('ADMIN', 'MANAGER', 'TEAM_LEAD')
   const isWorkspaceView = hasRole('ADMIN', 'MANAGER')
@@ -75,6 +91,17 @@ export default function CalendarPage() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWorkspaceView, isTeamLead])
+
+  // Refresh when the backend's overdue sweep fires (signalled via Layout).
+  const sweepSignal = useOutletContext()?.sweepSignal ?? 0
+  const prevSweepRef = useRef(sweepSignal)
+  useEffect(() => {
+    if (sweepSignal > 0 && sweepSignal !== prevSweepRef.current) {
+      prevSweepRef.current = sweepSignal
+      load()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sweepSignal])
 
   // Group tasks by Local YYYY-MM-DD
   const tasksByDay = useMemo(() => {
@@ -130,6 +157,7 @@ export default function CalendarPage() {
       load()
     } catch (err) {
       push(err.message || 'Failed to create task.', 'error')
+      throw err // keep the task drawer open on failure
     }
   }
 
@@ -137,6 +165,67 @@ export default function CalendarPage() {
     const pad = (n) => String(n).padStart(2, '0')
     const formatted = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T17:00`
     setFormDate(formatted)
+  }
+
+  // ----- Drag & drop: reschedule a task by dragging it onto another day -----
+  const onTaskDragStart = (e, task) => {
+    draggingRef.current = task
+    setDraggingId(task.id)
+    e.dataTransfer.effectAllowed = 'move'
+    // Some browsers require data to be set for a drag to start.
+    try {
+      e.dataTransfer.setData('text/plain', String(task.id))
+    } catch {
+      /* setData can throw in rare cases; the ref still carries the task */
+    }
+  }
+
+  const onTaskDragEnd = () => {
+    draggingRef.current = null
+    setDraggingId(null)
+    setDragOverKey(null)
+  }
+
+  const onDayDragOver = (e, key) => {
+    if (!draggingRef.current) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragOverKey !== key) setDragOverKey(key)
+  }
+
+  const onDayDrop = async (e, dayDate) => {
+    e.preventDefault()
+    const task = draggingRef.current
+    draggingRef.current = null
+    setDraggingId(null)
+    setDragOverKey(null)
+    if (!task) return
+
+    const targetKey = dateKey(dayDate)
+    const currentKey = task.dueDate ? dateKey(new Date(task.dueDate)) : null
+    if (currentKey === targetKey) return // dropped on the same day — nothing to do
+
+    const newDue = moveDueDateToDay(task.dueDate, dayDate)
+    const prev = taskList
+    // Optimistic move so the card jumps immediately.
+    setTaskList((list) => list.map((t) => (t.id === task.id ? { ...t, dueDate: newDue } : t)))
+
+    try {
+      const updated = await tasksApi.update(task.id, {
+        title: task.title,
+        description: task.description ?? '',
+        dueDate: newDue,
+        assigneeId: task.assignee?.id ?? null,
+        priority: task.priority ?? 'MEDIUM',
+        teamId: task.team?.id ?? null,
+        labelIds: (task.labels ?? []).map((l) => l.id)
+      })
+      setTaskList((list) => list.map((t) => (t.id === task.id ? updated : t)))
+      push('Task moved.', 'success')
+    } catch (err) {
+      setTaskList(prev) // revert on failure
+      push(err.message || 'Could not move the task.', 'error')
+    }
   }
 
   const today = new Date()
@@ -208,12 +297,17 @@ export default function CalendarPage() {
               const visible = dayTasks.slice(0, MAX_VISIBLE_PER_DAY)
               const overflow = dayTasks.length - visible.length
 
+              const isDropTarget = dragOverKey === dateKey(d)
+
               return (
                 <div
                   key={i}
+                  onDragOver={canManage ? (e) => onDayDragOver(e, dateKey(d)) : undefined}
+                  onDragLeave={canManage ? () => setDragOverKey((k) => (k === dateKey(d) ? null : k)) : undefined}
+                  onDrop={canManage ? (e) => onDayDrop(e, d) : undefined}
                   className={`group relative min-h-[105px] p-2 border-b border-r border-panelBorder/50 transition-colors ${
                     inMonth ? 'bg-panel/20 hover:bg-panelAlt/30' : 'bg-panelAlt/10 opacity-40'
-                  }`}
+                  } ${isDropTarget ? 'ring-2 ring-inset ring-accent bg-accent/10' : ''}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span
@@ -241,9 +335,14 @@ export default function CalendarPage() {
                     {visible.map((t) => (
                       <button
                         key={t.id}
+                        draggable={canManage}
+                        onDragStart={canManage ? (e) => onTaskDragStart(e, t) : undefined}
+                        onDragEnd={canManage ? onTaskDragEnd : undefined}
                         onClick={() => setOpenTask(t)}
-                        title={t.title}
-                        className="w-full flex items-center gap-1.5 text-left px-1.5 py-1 rounded-md bg-panelAlt/60 hover:bg-accent/15 border border-panelBorder/40 transition-all cursor-pointer"
+                        title={canManage ? `${t.title} — اسحبه لتغيير الميعاد` : t.title}
+                        className={`w-full flex items-center gap-1.5 text-left px-1.5 py-1 rounded-md bg-panelAlt/60 hover:bg-accent/15 border border-panelBorder/40 transition-all ${
+                          canManage ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+                        } ${draggingId === t.id ? 'opacity-40' : ''}`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STATUS_DOT[t.status] ?? 'bg-fog'}`} />
                         <span className="text-[11px] text-paper font-medium truncate leading-tight">

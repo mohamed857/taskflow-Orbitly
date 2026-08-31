@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound, Trash2, ListChecks } from 'lucide-react'
 import { users as usersApi, teams as teamsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -8,24 +9,71 @@ import RoleBadge from '../components/RoleBadge.jsx'
 import StatCard from '../components/StatCard.jsx'
 import ChangeRoleModal from '../components/ChangeRoleModal.jsx'
 import CreateUserModal from '../components/CreateUserModal.jsx'
+import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
+import TaskListModal from '../components/TaskListModal.jsx'
+import { tasks as tasksApi } from '../api/client.js'
 import { canChangeRole, allowedTargetRoles, roleScopeHint } from '../utils/roles.js'
+import { displayName } from '../utils/userDisplay.js'
 
 export default function UsersPage() {
   const { user: actingUser, hasRole } = useAuth()
   const { push } = useToast()
+  const navigate = useNavigate()
+
+  // Open a direct message with a teammate straight from the roster.
+  const openChat = (u) =>
+    navigate('/messages', {
+      state: {
+        startWith: {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          name: u.name,
+          avatarUrl: u.avatarUrl
+        }
+      }
+    })
   
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [target, setTarget] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [resetTarget, setResetTarget] = useState(null)
   const [teamList, setTeamList] = useState([])
   const [assigningId, setAssigningId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const [tasksTarget, setTasksTarget] = useState(null)
+
+  // Admin-only: permanently delete a member. Their tasks move to the acting admin.
+  const handleDelete = async (u) => {
+    const label = u.name || u.username
+    if (!window.confirm(
+      `Delete ${label}? This permanently removes their account. Their tasks will be reassigned to you. This can't be undone.`
+    )) return
+    setDeletingId(u.id)
+    const prev = list
+    setList((cur) => cur.filter((x) => x.id !== u.id))
+    try {
+      await usersApi.remove(u.id)
+      push('User deleted.', 'success')
+    } catch (err) {
+      setList(prev) // restore on failure
+      push(err.message || 'Could not delete the user.', 'error')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const isMountedRef = useRef(true)
 
   const canCreateUsers = hasRole('ADMIN', 'MANAGER')
   const canAssignAnyTeam = hasRole('ADMIN', 'MANAGER')
+  // Only an Admin (SUPER_ADMIN counts as Admin) may reset another member's
+  // password. Managers change only their own password from their profile.
+  const canResetPasswords = hasRole('ADMIN')
+  // Admin/Manager/Team Lead can open a member's task list.
+  const canViewTasks = hasRole('ADMIN', 'MANAGER', 'TEAM_LEAD')
   const isTeamLead = hasRole('TEAM_LEAD')
 
   // Load Workspace Roster safely
@@ -95,6 +143,7 @@ export default function UsersPage() {
       }
     } catch (err) {
       push(err.message || 'Could not update role.', 'error')
+      throw err // keep the modal open on failure
     }
   }
 
@@ -107,6 +156,7 @@ export default function UsersPage() {
       }
     } catch (err) {
       push(err.message || 'Could not create user.', 'error')
+      throw err // keep the modal open on failure
     }
   }
 
@@ -213,9 +263,12 @@ export default function UsersPage() {
                     <tr key={u.id} className="hover:bg-panelAlt/20 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <Avatar name={u.username || u.email} size={32} src={avatarSrc(u.avatarUrl)} />
+                          <Avatar name={displayName(u)} size={32} src={avatarSrc(u.avatarUrl)} />
                           <div className="min-w-0">
-                            <p className="text-paper text-xs font-semibold truncate">{u.username}</p>
+                            <p className="text-paper text-xs font-semibold truncate">
+                              {u.name || u.username}
+                              {u.name && <span className="text-fog font-normal font-mono ml-1.5">@{u.username}</span>}
+                            </p>
                             <p className="text-fog text-[11px] truncate">{u.email}</p>
                           </div>
                         </div>
@@ -266,18 +319,57 @@ export default function UsersPage() {
                           <span className="text-xs text-fog/50 font-mono italic">Unassigned</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {editable ? (
-                          <button
-                            onClick={() => setTarget(u)}
-                            title="Change user role"
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
-                          >
-                            <Pencil size={13} />
-                          </button>
-                        ) : (
-                          <span className="text-fog/50 text-[11px] font-mono">{disabledReason}</span>
-                        )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => openChat(u)}
+                              title={`Message ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <MessageSquare size={13} />
+                            </button>
+                          )}
+                          {canViewTasks && (
+                            <button
+                              onClick={() => setTasksTarget(u)}
+                              title={`View ${u.name || u.username}'s tasks`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <ListChecks size={13} />
+                            </button>
+                          )}
+                          {canResetPasswords && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => setResetTarget(u)}
+                              title={`Reset password for ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <KeyRound size={13} />
+                            </button>
+                          )}
+                          {canResetPasswords && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
+                            <button
+                              onClick={() => handleDelete(u)}
+                              disabled={deletingId === u.id}
+                              title={`Delete ${u.name || u.username}`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-overdue hover:border-overdue hover:bg-overdue/10 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === u.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                            </button>
+                          )}
+                          {editable ? (
+                            <button
+                              onClick={() => setTarget(u)}
+                              title="Change user role"
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                          ) : (
+                            <span className="text-fog/50 text-[11px] font-mono">{disabledReason}</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -297,7 +389,24 @@ export default function UsersPage() {
         onSubmit={handleRoleSubmit}
       />
 
-      <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} />
+      <CreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreateUser} teams={teamList} />
+
+      {resetTarget && (
+        <ResetPasswordModal
+          target={resetTarget}
+          resetFn={(id, pw) => usersApi.resetPassword(id, pw)}
+          onClose={() => setResetTarget(null)}
+        />
+      )}
+
+      {tasksTarget && (
+        <TaskListModal
+          title={`${tasksTarget.name || tasksTarget.username}'s tasks`}
+          subtitle={`@${tasksTarget.username}`}
+          loader={() => tasksApi.byUser(tasksTarget.id)}
+          onClose={() => setTasksTarget(null)}
+        />
+      )}
     </div>
   )
 }
