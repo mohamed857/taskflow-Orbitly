@@ -246,6 +246,10 @@ export const tasks = {
   assigned: () => request('/api/tasks?assigned=true'),
   workspace: () => request('/api/tasks/workspace'),
   team: () => request('/api/tasks/team'),
+  // Tasks of a specific team (Admin/Manager any team; Team Lead their own).
+  byTeam: (teamId) => request(`/api/tasks/team/${teamId}`),
+  // Tasks assigned to or reported by a specific user.
+  byUser: (userId) => request(`/api/tasks/user/${userId}`),
   subtasks: (taskId) => request(`/api/tasks/${taskId}/subtasks`),
   get: (id) => request(`/api/tasks/${id}`),
   create: (payload) => request('/api/tasks', { method: 'POST', body: payload }),

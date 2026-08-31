@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound, Trash2 } from 'lucide-react'
+import { Search as SearchIcon, Pencil, ShieldCheck, Users as UsersIcon, Crown, Shield, UserPlus, Users2, Loader2, Sparkles, MessageSquare, KeyRound, Trash2, ListChecks } from 'lucide-react'
 import { users as usersApi, teams as teamsApi, avatarSrc } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -10,6 +10,8 @@ import StatCard from '../components/StatCard.jsx'
 import ChangeRoleModal from '../components/ChangeRoleModal.jsx'
 import CreateUserModal from '../components/CreateUserModal.jsx'
 import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
+import TaskListModal from '../components/TaskListModal.jsx'
+import { tasks as tasksApi } from '../api/client.js'
 import { canChangeRole, allowedTargetRoles, roleScopeHint } from '../utils/roles.js'
 import { displayName } from '../utils/userDisplay.js'
 
@@ -41,6 +43,7 @@ export default function UsersPage() {
   const [teamList, setTeamList] = useState([])
   const [assigningId, setAssigningId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [tasksTarget, setTasksTarget] = useState(null)
 
   // Admin-only: permanently delete a member. Their tasks move to the acting admin.
   const handleDelete = async (u) => {
@@ -69,6 +72,8 @@ export default function UsersPage() {
   // Only an Admin (SUPER_ADMIN counts as Admin) may reset another member's
   // password. Managers change only their own password from their profile.
   const canResetPasswords = hasRole('ADMIN')
+  // Admin/Manager/Team Lead can open a member's task list.
+  const canViewTasks = hasRole('ADMIN', 'MANAGER', 'TEAM_LEAD')
   const isTeamLead = hasRole('TEAM_LEAD')
 
   // Load Workspace Roster safely
@@ -325,6 +330,15 @@ export default function UsersPage() {
                               <MessageSquare size={13} />
                             </button>
                           )}
+                          {canViewTasks && (
+                            <button
+                              onClick={() => setTasksTarget(u)}
+                              title={`View ${u.name || u.username}'s tasks`}
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-panelBorder/80 text-fog hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+                            >
+                              <ListChecks size={13} />
+                            </button>
+                          )}
                           {canResetPasswords && u.role !== 'SUPER_ADMIN' && u.id !== actingUser?.id && (
                             <button
                               onClick={() => setResetTarget(u)}
@@ -382,6 +396,15 @@ export default function UsersPage() {
           target={resetTarget}
           resetFn={(id, pw) => usersApi.resetPassword(id, pw)}
           onClose={() => setResetTarget(null)}
+        />
+      )}
+
+      {tasksTarget && (
+        <TaskListModal
+          title={`${tasksTarget.name || tasksTarget.username}'s tasks`}
+          subtitle={`@${tasksTarget.username}`}
+          loader={() => tasksApi.byUser(tasksTarget.id)}
+          onClose={() => setTasksTarget(null)}
         />
       )}
     </div>
