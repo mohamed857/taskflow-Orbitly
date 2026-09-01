@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Search as SearchIcon, ShieldAlert, KeyRound, Loader2, Users as UsersIcon, DollarSign } from 'lucide-react'
+import {
+  Search as SearchIcon, ShieldAlert, KeyRound, Loader2,
+  Users as UsersIcon, DollarSign, LayoutDashboard, Building2
+} from 'lucide-react'
 import { admin as adminApi, avatarSrc } from '../api/client.js'
 import { useToast } from '../context/ToastContext.jsx'
 import Avatar from '../components/Avatar.jsx'
@@ -7,6 +10,8 @@ import RoleBadge from '../components/RoleBadge.jsx'
 import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
 import { displayName } from '../utils/userDisplay.js'
 import FounderPricing from './FounderPricing.jsx'
+import FounderDashboard from './FounderDashboard.jsx'
+import FounderCompanies from './FounderCompanies.jsx'
 
 function UsersTab() {
   const { push } = useToast()
@@ -122,9 +127,11 @@ function UsersTab() {
 }
 
 export default function FounderConsole() {
-  const [tab, setTab] = useState('users') // 'users' | 'pricing'
+  const [tab, setTab] = useState('dashboard')
 
   const tabs = [
+    { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'companies', label: 'Companies', icon: Building2 },
     { key: 'users', label: 'Users', icon: UsersIcon },
     { key: 'pricing', label: 'Pricing', icon: DollarSign }
   ]
@@ -139,14 +146,14 @@ export default function FounderConsole() {
           <div>
             <h2 className="font-display text-xl font-bold tracking-tight text-paper">Founder Console</h2>
             <p className="text-xs font-mono text-fog mt-0.5">
-              Platform-wide administration — manage every user, and set live plan pricing.
+              Platform-wide administration — companies, users, pricing and revenue.
             </p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-panelBorder/60">
+      <div className="flex items-center gap-1 border-b border-panelBorder/60 overflow-x-auto">
         {tabs.map((t) => {
           const Icon = t.icon
           const active = tab === t.key
@@ -154,7 +161,7 @@ export default function FounderConsole() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
                 active ? 'border-accent text-accent' : 'border-transparent text-fog hover:text-paper'
               }`}
             >
@@ -164,7 +171,10 @@ export default function FounderConsole() {
         })}
       </div>
 
-      {tab === 'users' ? <UsersTab /> : <FounderPricing />}
+      {tab === 'dashboard' && <FounderDashboard />}
+      {tab === 'companies' && <FounderCompanies />}
+      {tab === 'users' && <UsersTab />}
+      {tab === 'pricing' && <FounderPricing />}
     </div>
   )
 }

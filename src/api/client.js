@@ -176,7 +176,12 @@ export const admin = {
     request(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
   // Live, DB-driven plan pricing (per-plan monthly USD + USD→EGP rate).
   pricing: () => request('/api/admin/pricing'),
-  updatePricing: (payload) => request('/api/admin/pricing', { method: 'PUT', body: payload })
+  updatePricing: (payload) => request('/api/admin/pricing', { method: 'PUT', body: payload }),
+  // Founder company (workspace) administration + platform dashboard.
+  stats: () => request('/api/admin/stats'),
+  companies: () => request('/api/admin/companies'),
+  company: (id) => request(`/api/admin/companies/${id}`),
+  deleteCompany: (id) => request(`/api/admin/companies/${id}`, { method: 'DELETE' })
 }
 
 export const users = {

@@ -63,6 +63,13 @@ function RootGate() {
   )
 }
 
+// The founder (SUPER_ADMIN) has no personal task dashboard; send them straight
+// to the platform console instead of the (empty) workspace dashboard.
+function HomeIndex() {
+  const { hasRole } = useAuth()
+  return hasRole('SUPER_ADMIN') ? <Navigate to="/console" replace /> : <Dashboard />
+}
+
 export default function App() {
   return (
     <LanguageProvider>
@@ -81,7 +88,7 @@ export default function App() {
 
               {/* Root shell — public landing for guests, dashboard for members */}
               <Route path="/" element={<RootGate />}>
-                <Route index element={<Dashboard />} />
+                <Route index element={<HomeIndex />} />
                 <Route path="board" element={<KanbanBoard />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="messages" element={<MessagesPage />} />
