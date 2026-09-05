@@ -9,6 +9,7 @@ import { ChatDockProvider } from './context/ChatDockContext.jsx'
 import { RealtimeProvider } from './context/RealtimeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireRole from './components/RequireRole.jsx'
+import GuestRoute from './components/GuestRoute.jsx'
 import Layout from './components/Layout.jsx'
 
 // Route-level code-splitting: each page becomes its own chunk, loaded on demand.
