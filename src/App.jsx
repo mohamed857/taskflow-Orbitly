@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext.jsx'
 import { ChatDockProvider } from './context/ChatDockContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireRole from './components/RequireRole.jsx'
+import GuestRoute from './components/GuestRoute.jsx'
 import Layout from './components/Layout.jsx'
 import Login from './pages/Login.jsx'
 import RegisterCompany from './pages/RegisterCompany.jsx'
@@ -30,8 +31,12 @@ export default function App() {
           <ChatDockProvider>
             <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register-company" element={<RegisterCompany />} />
+              {/* <Route path="/login" element={<Login />} />
+              <Route path="/register-company" element={<RegisterCompany />} /> */}
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register-company" element={<GuestRoute><RegisterCompany /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+
 
               {/* Authenticated Application Shell */}
               <Route
