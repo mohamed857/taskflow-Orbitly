@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080'
+const rawBase = import.meta.env.VITE_API_BASE ?? 'https://orbitly-api.onrender.com';
+const API_BASE = rawBase.replace(/\/api\/?$/, '');
+// const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080'
 const TOKEN_KEY = 'taskflow_token'
 const REFRESH_KEY = 'taskflow_refresh_token'
 

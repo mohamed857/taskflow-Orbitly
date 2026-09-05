@@ -74,9 +74,9 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
             <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register-company" element={<RegisterCompany />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register-company" element={<GuestRoute><RegisterCompany /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
               <Route path="/pricing" element={<Pricing />} />
 
               {/* Root shell — public landing for guests, dashboard for members */}
