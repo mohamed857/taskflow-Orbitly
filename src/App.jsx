@@ -31,12 +31,9 @@ export default function App() {
           <ChatDockProvider>
             <Routes>
               {/* Public Routes */}
-              {/* <Route path="/login" element={<Login />} />
-              <Route path="/register-company" element={<RegisterCompany />} /> */}
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/register-company" element={<GuestRoute><RegisterCompany /></GuestRoute>} />
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-
 
               {/* Authenticated Application Shell */}
               <Route
