@@ -9,6 +9,7 @@ import { ChatDockProvider } from './context/ChatDockContext.jsx'
 import { RealtimeProvider } from './context/RealtimeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireRole from './components/RequireRole.jsx'
+import GuestRoute from './components/GuestRoute.jsx'
 import Layout from './components/Layout.jsx'
 
 // Route-level code-splitting: each page becomes its own chunk, loaded on demand.
@@ -81,9 +82,10 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
             <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register-company" element={<RegisterCompany />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register-company" element={<GuestRoute><RegisterCompany /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+
               <Route path="/pricing" element={<Pricing />} />
 
               {/* Root shell — public landing for guests, dashboard for members */}
