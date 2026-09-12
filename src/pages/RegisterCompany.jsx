@@ -51,7 +51,7 @@ export default function RegisterCompany() {
     setLoading(true)
     try {
       await registerCompany(form)
-      navigate('/')
+      navigate('/dashboard')
     } catch (err) {
       setError(err.message || 'Could not create the company.')
     } finally {
