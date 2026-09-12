@@ -63,9 +63,18 @@ export function AuthProvider({ children }) {
     await authApi.register(payload)
   }, [])
 
-  const registerCompany = useCallback(async (payload) => {
-    await authApi.registerCompany(payload)
-  }, [])
+  const registerCompany = useCallback(
+    async (payload) => {
+      // register-company now returns the same shape as /login (token,
+      // refreshToken, user) — store the session the same way so the caller
+      // lands straight in the app instead of being sent back to /login.
+      const { token, refreshToken } = await authApi.registerCompany(payload)
+      setToken(token)
+      setRefreshToken(refreshToken)
+      await loadUser()
+    },
+    [loadUser]
+  )
 
   const hasRole = useCallback(
     (...roles) => {

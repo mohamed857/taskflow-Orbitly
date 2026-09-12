@@ -3,6 +3,7 @@ import { Users2, Plus, Pencil, Trash2, Loader2, Sparkles, Check, X } from 'lucid
 import { teams as teamsApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import TeamDetailModal from '../components/TeamDetailModal.jsx'
 
 function formatDate(value) {
   if (!value) return 'unknown'
@@ -17,6 +18,9 @@ export default function TeamsPage() {
   const canCreate = hasRole('ADMIN', 'MANAGER')
   const canRename = hasRole('ADMIN', 'MANAGER')
   const canDelete = hasRole('ADMIN', 'MANAGER')
+  // Admin/Manager can open a team to see its members and tasks.
+  const canViewDetail = hasRole('ADMIN', 'MANAGER')
+  const [detailTeam, setDetailTeam] = useState(null)
 
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -215,9 +219,19 @@ export default function TeamsPage() {
                     </div>
                   ) : (
                     <>
-                      <p className="text-paper text-sm font-bold truncate group-hover:text-accent transition-colors">
-                        {t.name}
-                      </p>
+                      {canViewDetail ? (
+                        <button
+                          onClick={() => setDetailTeam(t)}
+                          className="text-paper text-sm font-bold truncate group-hover:text-accent transition-colors text-left hover:underline"
+                          title="View team members & tasks"
+                        >
+                          {t.name}
+                        </button>
+                      ) : (
+                        <p className="text-paper text-sm font-bold truncate group-hover:text-accent transition-colors">
+                          {t.name}
+                        </p>
+                      )}
                       <p className="text-fog text-[11px] font-mono mt-0.5">Created {formatDate(t.createdAt)}</p>
                     </>
                   )}
@@ -249,6 +263,10 @@ export default function TeamsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {detailTeam && (
+        <TeamDetailModal team={detailTeam} onClose={() => setDetailTeam(null)} />
       )}
     </div>
   )

@@ -46,8 +46,19 @@ const NAV_SECTIONS = [
       { to: '/teams', tkey: 'nav.teams', icon: Network },
       { to: '/workspaces', tkey: 'nav.workspace', icon: Building2 },
       { to: '/subscription', tkey: 'nav.subscription', icon: CreditCard, roles: ['ADMIN', 'MANAGER'] },
-      { to: '/console', tkey: 'nav.console', icon: ShieldAlert, roles: ['SUPER_ADMIN'] },
       { to: '/profile', tkey: 'nav.profile', icon: UserCircle }
+    ]
+  }
+]
+
+// The founder (SUPER_ADMIN) doesn't run day-to-day task work, so their sidebar
+// is trimmed to the platform console plus their own profile.
+const FOUNDER_SECTIONS = [
+  {
+    label: 'Platform',
+    items: [
+      { to: '/console', label: 'Founder Console', icon: ShieldAlert, end: true },
+      { to: '/profile', label: 'Profile', icon: UserCircle }
     ]
   }
 ]
@@ -55,6 +66,9 @@ const NAV_SECTIONS = [
 export default function Sidebar({ open, onClose }) {
   const { hasRole } = useAuth()
   const { t } = useI18n()
+
+  const isFounder = hasRole('SUPER_ADMIN')
+  const sections = isFounder ? FOUNDER_SECTIONS : NAV_SECTIONS
 
   return (
     <>
@@ -92,20 +106,22 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Grouped Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6 custom-scrollbar">
-          {NAV_SECTIONS.map((section) => {
+          {sections.map((section) => {
             const visibleItems = section.items.filter(
               (item) => !item.roles || hasRole(...item.roles)
             )
 
             if (visibleItems.length === 0) return null
 
+            const heading = section.label ?? t(section.tkey)
+
             return (
-              <div key={section.tkey} className="space-y-1">
+              <div key={section.tkey ?? section.label} className="space-y-1">
                 <p className="px-3 text-[10px] uppercase font-mono tracking-wider text-fog/60 font-semibold mb-2">
-                  {t(section.tkey)}
+                  {heading}
                 </p>
 
-                {visibleItems.map(({ to, tkey, icon: Icon, end }) => (
+                {visibleItems.map(({ to, tkey, label, icon: Icon, end }) => (
                   <NavLink
                     key={to}
                     to={to}
@@ -127,7 +143,7 @@ export default function Sidebar({ open, onClose }) {
                             isActive ? 'text-accent' : 'text-fog group-hover:text-paper'
                           }`}
                         />
-                        <span className="truncate">{t(tkey)}</span>
+                        <span className="truncate">{label ?? t(tkey)}</span>
                         {isActive && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-accent rounded-r-full shadow-sm" />
                         )}

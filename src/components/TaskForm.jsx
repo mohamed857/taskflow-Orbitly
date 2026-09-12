@@ -5,6 +5,7 @@ import { labels as labelsApi, teams as teamsApi, attachments as attachmentsApi }
 import { PRIORITY_OPTIONS } from './PriorityBadge.jsx'
 import { displayName } from '../utils/userDisplay.js'
 import Portal from './Portal.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const EMPTY = {
   title: '',
@@ -50,6 +51,14 @@ export default function TaskForm({
   const [pendingFiles, setPendingFiles] = useState([])
   const fileInputRef = useRef(null)
   const isEdit = Boolean(initialTask)
+  const { user } = useAuth()
+
+  // A Team Lead may only file tasks under their own team, so scope the picker to
+  // it. Admins and Managers keep the full workspace team list.
+  const isTeamLeadOnly = user?.role === 'TEAM_LEAD'
+  const visibleTeams = isTeamLeadOnly
+    ? teamList.filter((tm) => tm.id === user?.teamId)
+    : teamList
 
   useEffect(() => {
     if (initialTask) {
@@ -341,7 +350,7 @@ export default function TaskForm({
                   <option value="" className="bg-panel text-fog">
                     Default (your team)
                   </option>
-                  {teamList.map((tm) => (
+                  {visibleTeams.map((tm) => (
                     <option key={tm.id} value={tm.id} className="bg-panel text-paper">
                       {tm.name}
                     </option>

@@ -9,6 +9,7 @@ import { ChatDockProvider } from './context/ChatDockContext.jsx'
 import { RealtimeProvider } from './context/RealtimeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireRole from './components/RequireRole.jsx'
+import GuestRoute from './components/GuestRoute.jsx'
 import Layout from './components/Layout.jsx'
 
 // Route-level code-splitting: each page becomes its own chunk, loaded on demand.
@@ -19,10 +20,12 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
 const FounderConsole = lazy(() => import('./pages/FounderConsole.jsx'))
 const Pricing = lazy(() => import('./pages/Pricing.jsx'))
 const Subscription = lazy(() => import('./pages/Subscription.jsx'))
+const BillingCallback = lazy(() => import('./pages/BillingCallback.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage.jsx'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage.jsx'))
 const MyTasks = lazy(() => import('./pages/MyTasks.jsx'))
 const AssignedTasks = lazy(() => import('./pages/AssignedTasks.jsx'))
 const WorkspaceTasks = lazy(() => import('./pages/WorkspaceTasks.jsx'))
@@ -62,6 +65,13 @@ function RootGate() {
   )
 }
 
+// The founder (SUPER_ADMIN) has no personal task dashboard; send them straight
+// to the platform console instead of the (empty) workspace dashboard.
+function HomeIndex() {
+  const { hasRole } = useAuth()
+  return hasRole('SUPER_ADMIN') ? <Navigate to="/console" replace /> : <Dashboard />
+}
+
 export default function App() {
   return (
     <LanguageProvider>
@@ -73,17 +83,20 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
             <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register-company" element={<RegisterCompany />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register-company" element={<GuestRoute><RegisterCompany /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
               <Route path="/pricing" element={<Pricing />} />
+
+              <Route path="/billing/callback"element={<ProtectedRoute><BillingCallback /></ProtectedRoute>}/>
 
               {/* Root shell — public landing for guests, dashboard for members */}
               <Route path="/" element={<RootGate />}>
-                <Route index element={<Dashboard />} />
+                <Route index element={<HomeIndex />} />
                 <Route path="board" element={<KanbanBoard />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="messages" element={<MessagesPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="tasks/mine" element={<MyTasks />} />
                 <Route path="tasks/assigned" element={<AssignedTasks />} />
 

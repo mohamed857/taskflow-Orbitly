@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, Check, UserPlus, MessageSquare, ShieldAlert, AlertTriangle, Loader2, RefreshCw, Users } from 'lucide-react'
 import { notifications as notificationsApi, tasks as tasksApi } from '../api/client.js'
 import { useToast } from '../context/ToastContext.jsx'
@@ -29,7 +30,18 @@ function formatWhen(dateStr) {
 export default function NotificationBell() {
   const { push } = useToast()
   const { subscribeNotifications } = useRealtime()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+
+  // On phones the dropdown doesn't fit, so tapping the bell opens a full page
+  // instead. On larger screens it toggles the popover as before.
+  const handleTrigger = () => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) {
+      navigate('/notifications')
+      return
+    }
+    setOpen((v) => !v)
+  }
   const [list, setList] = useState([])
   const [unread, setUnread] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -157,7 +169,7 @@ export default function NotificationBell() {
       {/* Trigger Button */}
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleTrigger}
         className="relative text-fog hover:text-paper rounded-lg p-2 hover:bg-panelAlt/60 transition-colors focus:outline-none focus:ring-1 focus:ring-accent/50 cursor-pointer"
         aria-label="Notifications"
         aria-expanded={open}
@@ -172,7 +184,7 @@ export default function NotificationBell() {
 
       {/* Popover Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-84 glass-panel rounded-xl border border-panelBorder/80 z-50 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-1.5rem))] sm:w-80 glass-panel rounded-xl border border-panelBorder/80 z-50 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Header */}
           <div className="flex items-center justify-between px-3.5 py-2.5 bg-panel/60 border-b border-panelBorder/60">
             <span className="label-eyebrow font-display tracking-wider">Notifications</span>

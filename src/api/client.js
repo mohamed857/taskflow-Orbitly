@@ -173,7 +173,15 @@ export const admin = {
   users: (query = '') =>
     request(`/api/admin/users${query ? `?query=${encodeURIComponent(query)}` : ''}`),
   resetPassword: (id, newPassword) =>
-    request(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } })
+    request(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
+  // Live, DB-driven plan pricing (per-plan monthly USD + USD→EGP rate).
+  pricing: () => request('/api/admin/pricing'),
+  updatePricing: (payload) => request('/api/admin/pricing', { method: 'PUT', body: payload }),
+  // Founder company (workspace) administration + platform dashboard.
+  stats: () => request('/api/admin/stats'),
+  companies: () => request('/api/admin/companies'),
+  company: (id) => request(`/api/admin/companies/${id}`),
+  deleteCompany: (id) => request(`/api/admin/companies/${id}`, { method: 'DELETE' })
 }
 
 export const users = {
@@ -190,6 +198,8 @@ export const users = {
   changePassword: (currentPassword, newPassword) =>
     request('/api/users/me/password', { method: 'PATCH', body: { currentPassword, newPassword } }),
   create: (payload) => request('/api/users', { method: 'POST', body: payload }),
+  // Admin only: permanently delete a member of the workspace.
+  remove: (id) => request(`/api/users/${id}`, { method: 'DELETE' }),
   uploadAvatar: async (file, { silent = false } = {}) => {
     const form = new FormData()
     form.append('file', file)
@@ -244,6 +254,10 @@ export const tasks = {
   assigned: () => request('/api/tasks?assigned=true'),
   workspace: () => request('/api/tasks/workspace'),
   team: () => request('/api/tasks/team'),
+  // Tasks of a specific team (Admin/Manager any team; Team Lead their own).
+  byTeam: (teamId) => request(`/api/tasks/team/${teamId}`),
+  // Tasks assigned to or reported by a specific user.
+  byUser: (userId) => request(`/api/tasks/user/${userId}`),
   subtasks: (taskId) => request(`/api/tasks/${taskId}/subtasks`),
   get: (id) => request(`/api/tasks/${id}`),
   create: (payload) => request('/api/tasks', { method: 'POST', body: payload }),
@@ -325,6 +339,13 @@ export const plans = {
 export const subscription = {
   get: () => request('/api/subscription'),
   change: (plan) => request('/api/subscription', { method: 'PUT', body: { plan } })
+}
+
+// Paymob checkout. Only FREE-tier switches skip this and call subscription.change()
+// directly — every paid plan goes through here since real money is involved.
+export const payments = {
+  checkout: (plan, billingCycle = 'MONTHLY') =>
+    request('/api/payments/checkout', { method: 'POST', body: { plan, billingCycle } })
 }
 
 export const messages = {
