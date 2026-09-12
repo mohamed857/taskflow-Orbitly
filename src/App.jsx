@@ -20,6 +20,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
 const FounderConsole = lazy(() => import('./pages/FounderConsole.jsx'))
 const Pricing = lazy(() => import('./pages/Pricing.jsx'))
 const Subscription = lazy(() => import('./pages/Subscription.jsx'))
+const BillingCallback = lazy(() => import('./pages/BillingCallback.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
@@ -85,8 +86,9 @@ export default function App() {
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/register-company" element={<GuestRoute><RegisterCompany /></GuestRoute>} />
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-
               <Route path="/pricing" element={<Pricing />} />
+
+              <Route path="/billing/callback"element={<ProtectedRoute><BillingCallback /></ProtectedRoute>}/>
 
               {/* Root shell — public landing for guests, dashboard for members */}
               <Route path="/" element={<RootGate />}>

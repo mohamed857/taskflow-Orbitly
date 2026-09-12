@@ -341,6 +341,13 @@ export const subscription = {
   change: (plan) => request('/api/subscription', { method: 'PUT', body: { plan } })
 }
 
+// Paymob checkout. Only FREE-tier switches skip this and call subscription.change()
+// directly — every paid plan goes through here since real money is involved.
+export const payments = {
+  checkout: (plan, billingCycle = 'MONTHLY') =>
+    request('/api/payments/checkout', { method: 'POST', body: { plan, billingCycle } })
+}
+
 export const messages = {
   conversations: () => request('/api/messages/conversations'),
   thread: (userId) => request(`/api/messages/conversations/${userId}`),

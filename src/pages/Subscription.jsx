@@ -1,9 +1,22 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Check, Loader2, Star, Users, Layers, Lock } from 'lucide-react'
-import { plans as plansApi, subscription as subscriptionApi } from '../api/client.js'
+import { useEffect, useState, useCallback } from 'react'
+import { Check, Loader2, Star, Users, Layers } from 'lucide-react'
+import { plans as plansApi, subscription as subscriptionApi, payments as paymentsApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useI18n } from '../context/LanguageContext.jsx'
+
+// Prices shown here come straight from GET /api/plans (monthlyUsd/yearlyUsd/
+// monthlyEgp/yearlyEgp) — the backend's PricingService is the only source of
+// truth for the amount and the exchange rate, so nothing is computed here.
+function formatPrice(plan, cycle, currency, ar) {
+  const isYearly = cycle === 'YEARLY'
+  if (currency === 'EGP') {
+    const egp = isYearly ? plan.yearlyEgp : plan.monthlyEgp
+    return ar ? `${egp} ج.م` : `EGP ${egp}`
+  }
+  const usd = isYearly ? plan.yearlyUsd : plan.monthlyUsd
+  return `$${usd}`
+}
 
 function UsageBar({ icon: Icon, label, used, limit, unlimited, ar }) {
   const pct = unlimited ? 0 : Math.min(100, limit > 0 ? Math.round((used / limit) * 100) : 0)
@@ -16,7 +29,7 @@ function UsageBar({ icon: Icon, label, used, limit, unlimited, ar }) {
         </span>
         <span className="font-mono text-xs text-fog">
           {used}
-          {unlimited ? ' / ∞' : ` / ${limit}`}
+          {unlimited ? ` / ${ar ? '∞' : '∞'}` : ` / ${limit}`}
         </span>
       </div>
       {!unlimited && (
@@ -32,25 +45,6 @@ function UsageBar({ icon: Icon, label, used, limit, unlimited, ar }) {
   )
 }
 
-function Segmented({ options, value, onChange }) {
-  return (
-    <div className="inline-flex rounded-lg border border-panelBorder bg-panelAlt/40 p-0.5">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          onClick={() => onChange(o.value)}
-          className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-colors ${
-            value === o.value ? 'bg-accent text-white' : 'text-fog hover:text-paper'
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 export default function Subscription() {
   const { hasRole } = useAuth()
   const { push } = useToast()
@@ -62,8 +56,8 @@ export default function Subscription() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [changing, setChanging] = useState(null)
-  const [cycle, setCycle] = useState('monthly')
-  const [currency, setCurrency] = useState('usd')
+  const [cycle, setCycle] = useState('MONTHLY') // MONTHLY | YEARLY
+  const [currency, setCurrency] = useState('USD') // USD | EGP
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -82,51 +76,36 @@ export default function Subscription() {
     load()
   }, [load])
 
-  const yearly = cycle === 'yearly'
-  const egp = currency === 'egp'
-
-  const money = (amount) => {
-    const n = Number(amount || 0).toLocaleString(ar ? 'ar-EG' : 'en-US')
-    return egp ? (ar ? `${n} ج.م` : `${n} EGP`) : `$${n}`
-  }
-  const priceFor = (p) => (yearly ? (egp ? p.yearlyEgp : p.yearlyUsd) : egp ? p.monthlyEgp : p.monthlyUsd)
-
-  // A plan is a blocked downgrade when its limits are below current usage.
-  const isDowngradeBlocked = useCallback(
-    (p) => {
-      if (!sub) return false
-      const overMembers = !p.unlimitedMembers && (sub.membersUsed ?? 0) > p.maxMembers
-      const overTeams = !p.unlimitedTeams && (sub.teamsUsed ?? 0) > p.maxTeams
-      return overMembers || overTeams
-    },
-    [sub]
-  )
-
-  const cycleOptions = useMemo(
-    () => [
-      { value: 'monthly', label: ar ? 'شهري' : 'Monthly' },
-      { value: 'yearly', label: ar ? 'سنوي' : 'Yearly' }
-    ],
-    [ar]
-  )
-  const currencyOptions = useMemo(
-    () => [
-      { value: 'usd', label: 'USD $' },
-      { value: 'egp', label: ar ? 'ج.م' : 'EGP' }
-    ],
-    [ar]
-  )
-
-  const switchPlan = async (key) => {
-    if (!isAdmin || key === sub?.plan) return
+  const switchPlan = async (key, pricePerUser) => {
+    if (!isAdmin || key === sub?.plan || changing) return
     setChanging(key)
+
+    // FREE has nothing to pay for, so it stays an instant, direct switch.
+    if (pricePerUser === 0) {
+      try {
+        const updated = await subscriptionApi.change(key)
+        setSub(updated)
+        push(ar ? 'تم تغيير الباقة.' : 'Plan updated.', 'success')
+      } catch (err) {
+        push(err.message || 'Could not change plan.', 'error')
+      } finally {
+        setChanging(null)
+      }
+      return
+    }
+
+    // Any paid plan goes through Paymob. The actual upgrade only happens
+    // server-side via Paymob's webhook once payment clears — this call just
+    // opens the payment page. /billing/callback polls for the real result.
     try {
-      const updated = await subscriptionApi.change(key)
-      setSub(updated)
-      push(ar ? 'تم تغيير الباقة.' : 'Plan updated.', 'success')
+      const res = await paymentsApi.checkout(key, cycle)
+      sessionStorage.setItem(
+        'tf_pending_checkout',
+        JSON.stringify({ fromPlan: sub?.plan, toPlan: res.plan, startedAt: Date.now() })
+      )
+      window.location.href = res.iframeUrl
     } catch (err) {
-      push(err.message || 'Could not change plan.', 'error')
-    } finally {
+      push(err.message || (ar ? 'تعذر بدء عملية الدفع.' : 'Could not start checkout.'), 'error')
       setChanging(null)
     }
   }
@@ -174,18 +153,48 @@ export default function Subscription() {
 
       {/* Plans */}
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <p className="label-eyebrow text-xs font-mono text-fog">
             {ar ? 'الباقات المتاحة' : 'Available plans'}
           </p>
+
           <div className="flex items-center gap-2">
-            <Segmented options={cycleOptions} value={cycle} onChange={setCycle} />
-            {yearly && (
-              <span className="inline-flex items-center rounded-full bg-completed/15 text-completed px-2 py-0.5 text-[10px] font-semibold">
-                {ar ? 'شهران مجانًا' : '2 mo free'}
-              </span>
-            )}
-            <Segmented options={currencyOptions} value={currency} onChange={setCurrency} />
+            {/* Billing cycle toggle */}
+            <div className="inline-flex rounded-lg border border-panelBorder p-0.5 bg-panelAlt/40">
+              {['MONTHLY', 'YEARLY'].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCycle(c)}
+                  className={`px-2.5 h-7 rounded-md text-[11px] font-semibold transition-colors ${
+                    cycle === c ? 'bg-accent text-white' : 'text-fog hover:text-paper'
+                  }`}
+                >
+                  {c === 'MONTHLY' ? (ar ? 'شهري' : 'Monthly') : ar ? 'سنوي' : 'Yearly'}
+                  {c === 'YEARLY' && (
+                    <span className={`ms-1 ${cycle === c ? 'text-white/80' : 'text-completed'}`}>
+                      {ar ? '(وفّر شهرين)' : '(2 free)'}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Currency toggle */}
+            <div className="inline-flex rounded-lg border border-panelBorder p-0.5 bg-panelAlt/40">
+              {['USD', 'EGP'].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCurrency(c)}
+                  className={`px-2.5 h-7 rounded-md text-[11px] font-semibold transition-colors ${
+                    currency === c ? 'bg-accent text-white' : 'text-fog hover:text-paper'
+                  }`}
+                >
+                  {c === 'USD' ? '$ USD' : 'ج.م EGP'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -193,8 +202,6 @@ export default function Subscription() {
           {plans.map((p) => {
             const current = p.key === sub?.plan
             const highlight = p.key === 'PRO'
-            const free = p.monthlyUsd === 0
-            const blocked = !current && isDowngradeBlocked(p)
             return (
               <div
                 key={p.key}
@@ -208,25 +215,21 @@ export default function Subscription() {
                   </span>
                 )}
                 <h3 className="font-display font-bold text-paper">{p.name}</h3>
-                <div className="mt-2 min-h-[3rem]">
-                  {free ? (
-                    <span className="font-display text-2xl font-bold text-paper">{ar ? 'مجانًا' : 'Free'}</span>
-                  ) : (
-                    <>
-                      <div className="flex items-baseline gap-1 flex-wrap">
-                        <span className="font-display text-2xl font-bold text-paper">{money(priceFor(p))}</span>
-                        <span className="text-fog text-[10px] font-mono">
-                          /{ar ? 'مستخدم' : 'user'}/{yearly ? (ar ? 'سنة' : 'yr') : ar ? 'شهر' : 'mo'}
-                        </span>
-                      </div>
-                      {yearly && (
-                        <p className="text-[10px] text-fog font-mono mt-0.5">
-                          ≈ {money(Math.round((egp ? p.yearlyEgp : p.yearlyUsd) / 12))}/{ar ? 'شهر' : 'mo'}
-                        </p>
-                      )}
-                    </>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="font-display text-2xl font-bold text-paper">
+                    {p.pricePerUser === 0 ? (ar ? 'مجانًا' : 'Free') : formatPrice(p, cycle, currency, ar)}
+                  </span>
+                  {p.pricePerUser > 0 && (
+                    <span className="text-fog text-[10px] font-mono">
+                      /{cycle === 'YEARLY' ? (ar ? 'مستخدم/سنة' : 'user/yr') : ar ? 'مستخدم/شهر' : 'user/mo'}
+                    </span>
                   )}
                 </div>
+                {p.pricePerUser > 0 && cycle === 'YEARLY' && (
+                  <p className="text-[10px] text-completed font-mono mt-0.5">
+                    {ar ? 'مفوتر سنويًا (شهرين مجانًا)' : 'billed annually (2 months free)'}
+                  </p>
+                )}
                 <div className="mt-3 space-y-1 text-[11px] text-fog font-mono">
                   <p>{p.unlimitedMembers ? (ar ? '∞ عضو' : '∞ members') : `${p.maxMembers} ${ar ? 'عضو' : 'members'}`}</p>
                   <p>{p.unlimitedTeams ? (ar ? '∞ فريق' : '∞ teams') : `${p.maxTeams} ${ar ? 'فريق' : 'teams'}`}</p>
@@ -237,31 +240,20 @@ export default function Subscription() {
                     <span className="h-9 rounded-lg bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center gap-1">
                       <Check size={14} /> {ar ? 'باقتك الحالية' : 'Current plan'}
                     </span>
-                  ) : !isAdmin ? (
-                    <span className="text-[10px] text-fog/70 font-mono block text-center">
-                      {ar ? 'المالك فقط يغيّر الباقة' : 'Owner changes the plan'}
-                    </span>
-                  ) : blocked ? (
-                    <div className="space-y-1.5">
-                      <span className="h-9 rounded-lg bg-overdue/10 text-overdue text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed">
-                        <Lock size={12} /> {ar ? 'غير متاح' : 'Unavailable'}
-                      </span>
-                      <p className="text-[10px] text-overdue/90 text-center leading-tight">
-                        {ar
-                          ? 'استخدامك الحالي يتجاوز حدود هذه الباقة. أزل أعضاء أو فرقًا أولًا.'
-                          : 'Your usage exceeds this plan. Remove members or teams first.'}
-                      </p>
-                    </div>
-                  ) : (
+                  ) : isAdmin ? (
                     <button
                       type="button"
-                      onClick={() => switchPlan(p.key)}
+                      onClick={() => switchPlan(p.key, p.pricePerUser)}
                       disabled={changing === p.key}
                       className="h-9 w-full rounded-lg border border-panelBorder text-paper text-xs font-semibold hover:border-accent hover:text-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
                       {changing === p.key && <Loader2 size={13} className="animate-spin" />}
                       {ar ? 'التبديل لهذه الباقة' : 'Switch to this plan'}
                     </button>
+                  ) : (
+                    <span className="text-[10px] text-fog/70 font-mono block text-center">
+                      {ar ? 'المالك فقط يغيّر الباقة' : 'Owner changes the plan'}
+                    </span>
                   )}
                 </div>
               </div>
@@ -271,8 +263,8 @@ export default function Subscription() {
         {isAdmin && (
           <p className="text-[11px] text-fog/70 mt-3">
             {ar
-              ? 'التبديل فوري (بدون دفع حاليًا). دمج بوابة الدفع يمكن إضافته لاحقًا.'
-              : 'Switching is instant (no payment yet). A payment gateway can be added later.'}
+              ? 'الترقية للباقات المدفوعة بتفتح صفحة دفع آمنة عبر Paymob. لو سعر الصرف اتغيّر بعد ما فتحت الصفحة، المبلغ اللي هيتحصّل فعليًا هو المحسوب وقت الدفع.'
+              : 'Upgrading to a paid plan opens a secure Paymob checkout page. If the exchange rate changes after this page loads, the amount actually charged is whatever it is at checkout time.'}
           </p>
         )}
       </div>
