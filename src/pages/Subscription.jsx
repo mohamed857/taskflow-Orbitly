@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Check, Loader2, Star, Users, Layers } from 'lucide-react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { Check, Loader2, Star, Users, Layers, Lock } from 'lucide-react'
 import { plans as plansApi, subscription as subscriptionApi, payments as paymentsApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -57,7 +57,9 @@ export default function Subscription() {
   const [loading, setLoading] = useState(true)
   const [changing, setChanging] = useState(null)
   const [cycle, setCycle] = useState('MONTHLY') // MONTHLY | YEARLY
-  const [currency, setCurrency] = useState('USD') // USD | EGP
+  // Paymob only settles in EGP today, so USD is display-only and disabled -
+  // default to EGP since that's what will actually be charged.
+  const [currency, setCurrency] = useState('EGP') // USD | EGP
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -75,6 +77,18 @@ export default function Subscription() {
   useEffect(() => {
     load()
   }, [load])
+
+  // A plan is a blocked downgrade when its limits are below current usage -
+  // switching to it would immediately put the workspace over its own limits.
+  const isDowngradeBlocked = useCallback(
+    (p) => {
+      if (!sub) return false
+      const overMembers = !p.unlimitedMembers && (sub.membersUsed ?? 0) > p.maxMembers
+      const overTeams = !p.unlimitedTeams && (sub.teamsUsed ?? 0) > p.maxTeams
+      return overMembers || overTeams
+    },
+    [sub]
+  )
 
   const switchPlan = async (key, pricePerUser) => {
     if (!isAdmin || key === sub?.plan || changing) return
@@ -180,20 +194,30 @@ export default function Subscription() {
               ))}
             </div>
 
-            {/* Currency toggle */}
-            <div className="inline-flex rounded-lg border border-panelBorder p-0.5 bg-panelAlt/40">
-              {['USD', 'EGP'].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCurrency(c)}
-                  className={`px-2.5 h-7 rounded-md text-[11px] font-semibold transition-colors ${
-                    currency === c ? 'bg-accent text-white' : 'text-fog hover:text-paper'
-                  }`}
-                >
-                  {c === 'USD' ? '$ USD' : 'ج.م EGP'}
-                </button>
-              ))}
+            {/* Currency toggle - USD is display-only for now: Paymob only
+                settles in EGP, so switching to USD would show a price that
+                doesn't match what's actually charged at checkout. */}
+            <div
+              className="inline-flex rounded-lg border border-panelBorder p-0.5 bg-panelAlt/40"
+              title={ar ? 'الدفع بالدولار غير متاح حاليًا' : 'USD checkout is not available yet'}
+            >
+              {['USD', 'EGP'].map((c) => {
+                const disabled = c === 'USD'
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => !disabled && setCurrency(c)}
+                    className={`px-2.5 h-7 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                      currency === c ? 'bg-accent text-white' : 'text-fog hover:text-paper'
+                    } ${disabled ? 'opacity-40 cursor-not-allowed hover:text-fog' : ''}`}
+                  >
+                    {disabled && <Lock size={10} />}
+                    {c === 'USD' ? '$ USD' : 'ج.م EGP'}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -202,6 +226,7 @@ export default function Subscription() {
           {plans.map((p) => {
             const current = p.key === sub?.plan
             const highlight = p.key === 'PRO'
+            const blocked = !current && isDowngradeBlocked(p)
             return (
               <div
                 key={p.key}
@@ -240,6 +265,17 @@ export default function Subscription() {
                     <span className="h-9 rounded-lg bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center gap-1">
                       <Check size={14} /> {ar ? 'باقتك الحالية' : 'Current plan'}
                     </span>
+                  ) : blocked ? (
+                    <div className="space-y-1.5">
+                      <span className="h-9 rounded-lg bg-overdue/10 text-overdue text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed">
+                        <Lock size={12} /> {ar ? 'غير متاح' : 'Unavailable'}
+                      </span>
+                      <p className="text-[10px] text-overdue/90 text-center leading-tight">
+                        {ar
+                          ? 'استخدامك الحالي يتجاوز حدود هذه الباقة. أزل أعضاء أو فرقًا أولًا.'
+                          : 'Your usage exceeds this plan. Remove members or teams first.'}
+                      </p>
+                    </div>
                   ) : isAdmin ? (
                     <button
                       type="button"
@@ -263,8 +299,8 @@ export default function Subscription() {
         {isAdmin && (
           <p className="text-[11px] text-fog/70 mt-3">
             {ar
-              ? 'الترقية للباقات المدفوعة بتفتح صفحة دفع آمنة عبر Paymob. لو سعر الصرف اتغيّر بعد ما فتحت الصفحة، المبلغ اللي هيتحصّل فعليًا هو المحسوب وقت الدفع.'
-              : 'Upgrading to a paid plan opens a secure Paymob checkout page. If the exchange rate changes after this page loads, the amount actually charged is whatever it is at checkout time.'}
+              ? 'الترقية للباقات المدفوعة بتفتح صفحة دفع آمنة عبر Paymob بالجنيه المصري. لو سعر الصرف اتغيّر بعد ما فتحت الصفحة، المبلغ اللي هيتحصّل فعليًا هو المحسوب وقت الدفع.'
+              : 'Upgrading to a paid plan opens a secure Paymob checkout page, billed in EGP. If the exchange rate changes after this page loads, the amount actually charged is whatever it is at checkout time.'}
           </p>
         )}
       </div>
