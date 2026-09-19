@@ -228,6 +228,10 @@
   .foot .links a{color:var(--ink-2); font-family:var(--f-head); font-weight:600; font-size:.9rem}
   .foot .links a:hover{color:var(--blue-ink)}
   .copy{color:var(--ink-2); font-size:.86rem; font-family:var(--f-head); font-weight:600}
+  .foot-legal{margin-top:18px; padding-top:18px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:.6rem 1.3rem; justify-content:center}
+  .foot-legal a{color:var(--ink-2); font-family:var(--f-head); font-weight:600; font-size:.8rem}
+  .foot-legal a:hover{color:var(--blue-ink)}
+  @media (max-width:600px){.foot-legal{justify-content:flex-start}}
 
   /* ===== phones — keep everything tidy and edge-safe ===== */
   @media (max-width:600px){
@@ -531,10 +535,19 @@
 </section>
 
 <footer>
-  <div class="wrap foot">
-    <a class="brand" href="#top"><svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><ellipse cx="16" cy="16" rx="13" ry="6.5" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="5.5" fill="currentColor"/><circle cx="26.5" cy="8.5" r="2.6" fill="currentColor"/></svg>Orbitly</a>
-    <div class="links"><a href="#features"><span class="lang-ar">المميزات</span><span class="lang-en">Features</span></a><a href="#pricing"><span class="lang-ar">الأسعار</span><span class="lang-en">Pricing</span></a><a href="#faq"><span class="lang-ar">الأسئلة</span><span class="lang-en">FAQ</span></a><a href="https://kvanthq.com" target="_blank" rel="noopener noreferrer"><span class="lang-ar">كفانت ↗</span><span class="lang-en">Kvant ↗</span></a></div>
-    <div class="copy">© Orbitly by <a href="https://kvanthq.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue-ink); text-decoration:underline; text-underline-offset:2px">Kvant</a></div>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="#top"><svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><ellipse cx="16" cy="16" rx="13" ry="6.5" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="16" r="5.5" fill="currentColor"/><circle cx="26.5" cy="8.5" r="2.6" fill="currentColor"/></svg>Orbitly</a>
+      <div class="links"><a href="#features"><span class="lang-ar">المميزات</span><span class="lang-en">Features</span></a><a href="#pricing"><span class="lang-ar">الأسعار</span><span class="lang-en">Pricing</span></a><a href="#faq"><span class="lang-ar">الأسئلة</span><span class="lang-en">FAQ</span></a><a href="https://kvanthq.com" target="_blank" rel="noopener noreferrer"><span class="lang-ar">كفانت ↗</span><span class="lang-en">Kvant ↗</span></a></div>
+      <div class="copy">© Orbitly by <a href="https://kvanthq.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue-ink); text-decoration:underline; text-underline-offset:2px">Kvant</a></div>
+    </div>
+    <div class="foot-legal">
+      <a href="/about" target="_top"><span class="lang-ar">من نحن</span><span class="lang-en">About</span></a>
+      <a href="/contact" target="_top"><span class="lang-ar">اتصل بنا</span><span class="lang-en">Contact</span></a>
+      <a href="/privacy-policy" target="_top"><span class="lang-ar">سياسة الخصوصية</span><span class="lang-en">Privacy Policy</span></a>
+      <a href="/delivery-policy" target="_top"><span class="lang-ar">سياسة التسليم</span><span class="lang-en">Delivery Policy</span></a>
+      <a href="/refund-policy" target="_top"><span class="lang-ar">سياسة الاسترجاع</span><span class="lang-en">Refund Policy</span></a>
+    </div>
   </div>
 </footer>
 

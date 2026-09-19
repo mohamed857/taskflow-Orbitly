@@ -34,6 +34,11 @@ const UsersPage = lazy(() => import('./pages/UsersPage.jsx'))
 const WorkspacesPage = lazy(() => import('./pages/WorkspacesPage.jsx'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage.jsx'))
 const Profile = lazy(() => import('./pages/Profile.jsx'))
+const AboutUs = lazy(() => import('./pages/AboutUs.jsx'))
+const ContactUs = lazy(() => import('./pages/ContactUs.jsx'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'))
+const DeliveryPolicy = lazy(() => import('./pages/DeliveryPolicy.jsx'))
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy.jsx'))
 
 function RouteFallback() {
   return (
@@ -88,7 +93,20 @@ export default function App() {
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
               <Route path="/pricing" element={<Pricing />} />
 
-              <Route path="/billing/callback"element={<ProtectedRoute><BillingCallback /></ProtectedRoute>}/>
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/contact" element={<ContactUs />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/delivery-policy" element={<DeliveryPolicy />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+
+              <Route
+                path="/billing/callback"
+                element={
+                  <ProtectedRoute>
+                    <BillingCallback />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Root shell — public landing for guests, dashboard for members */}
               <Route path="/" element={<RootGate />}>

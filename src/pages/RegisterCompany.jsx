@@ -14,6 +14,10 @@ function planMeta(p) {
   return `${members} · ${teams}`
 }
 
+// Creates a brand-new, fully isolated company. This is the ONLY way a new
+// workspace comes into existence now — no shared default workspace, no
+// browsing other companies. The person who signs up here becomes the
+// company's Owner (Admin role), scoped strictly to their own workspace.
 export default function RegisterCompany() {
   const { registerCompany } = useAuth()
   const navigate = useNavigate()
@@ -62,6 +66,7 @@ export default function RegisterCompany() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-ink px-4 py-12 relative overflow-hidden">
       <div className="w-full max-w-sm relative z-10 animate-enter">
+        {/* Header Indicator */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="status-dot-pulse" />
@@ -71,6 +76,7 @@ export default function RegisterCompany() {
           </div>
         </div>
 
+        {/* Glassmorphic Panel Container */}
         <div className="glass-panel p-8">
           <h1 className="text-2xl font-bold text-paper mb-1 tracking-tight">Create your company</h1>
           <p className="text-xs text-fog mb-6 leading-relaxed">
@@ -78,6 +84,7 @@ export default function RegisterCompany() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Company Name */}
             <div>
               <label className="label-eyebrow block mb-1.5" htmlFor="companyName">
                 Company name
@@ -95,6 +102,7 @@ export default function RegisterCompany() {
               </div>
             </div>
 
+            {/* Owner Username */}
             <div>
               <label className="label-eyebrow block mb-1.5" htmlFor="ownerUsername">
                 Username
@@ -112,6 +120,7 @@ export default function RegisterCompany() {
               </div>
             </div>
 
+            {/* Owner Full Name */}
             <div>
               <label className="label-eyebrow block mb-1.5" htmlFor="ownerName">
                 Your name
@@ -129,6 +138,7 @@ export default function RegisterCompany() {
               </div>
             </div>
 
+            {/* Owner Email */}
             <div>
               <label className="label-eyebrow block mb-1.5" htmlFor="ownerEmail">
                 Your email
@@ -147,6 +157,7 @@ export default function RegisterCompany() {
               </div>
             </div>
 
+            {/* Owner Password */}
             <div>
               <label className="label-eyebrow block mb-1.5" htmlFor="ownerPassword">
                 Password
@@ -174,6 +185,7 @@ export default function RegisterCompany() {
               </div>
             </div>
 
+            {/* Plan info (display only — backend always starts new companies on Free) */}
             <div>
               <div className="flex items-baseline justify-between mb-2">
                 <label className="label-eyebrow">Available plans</label>
@@ -224,12 +236,14 @@ export default function RegisterCompany() {
               )}
             </div>
 
+            {/* Error Message Display */}
             {error && (
               <div className="p-3 rounded-lg bg-overdue/10 border border-overdue/20 text-overdue text-xs font-mono">
                 {error}
               </div>
             )}
 
+            {/* Glowing Action Button */}
             <button type="submit" disabled={loading} className="btn-primary w-full group mt-2">
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -246,6 +260,7 @@ export default function RegisterCompany() {
           </form>
         </div>
 
+        {/* Footer Navigation Link */}
         <p className="text-xs text-fog text-center mt-6">
           Already registered?{' '}
           <Link
