@@ -1,15 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { plans as plansApi } from '../api/client.js'
 import { Eye, EyeOff, Building2, User, AtSign, Mail, Lock, ArrowRight, Loader2, Check, Star } from 'lucide-react'
 
-// Plans offered at signup. Kept in sync with the backend Plan enum.
-const PLAN_OPTIONS = [
-  { key: 'FREE', name: 'Free', price: 0, meta: '5 members · 1 team' },
-  { key: 'STARTER', name: 'Starter', price: 4, meta: '15 members · 3 teams' },
-  { key: 'PRO', name: 'Pro', price: 8, meta: '50 members · 15 teams', popular: true },
-  { key: 'BUSINESS', name: 'Business', price: 16, meta: 'Unlimited members & teams' }
-]
+// Shown as "Popular" on the signup plan picker — a display choice, not data
+// from the backend.
+const POPULAR_PLAN_KEY = 'PRO'
+
+function planMeta(p) {
+  const members = p.unlimitedMembers ? '∞ members' : `${p.maxMembers} members`
+  const teams = p.unlimitedTeams ? '∞ teams' : `${p.maxTeams} teams`
+  return `${members} · ${teams}`
+}
 
 // Creates a brand-new, fully isolated company. This is the ONLY way a new
 // workspace comes into existence now — no shared default workspace, no
@@ -24,12 +27,27 @@ export default function RegisterCompany() {
     ownerName: '',
     ownerEmail: '',
     ownerPassword: '',
-    plan: 'FREE',
   })
 
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [plans, setPlans] = useState([])
+  const [plansLoading, setPlansLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    plansApi
+      .list()
+      .then((data) => !cancelled && setPlans(Array.isArray(data) ? data : []))
+      .catch(() => {
+        // Purely informational here — if it fails, we just show nothing.
+      })
+      .finally(() => !cancelled && setPlansLoading(false))
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -37,7 +55,7 @@ export default function RegisterCompany() {
     setLoading(true)
     try {
       await registerCompany(form)
-      navigate('/login')
+      navigate('/subscription')
     } catch (err) {
       setError(err.message || 'Could not create the company.')
     } finally {
@@ -167,51 +185,55 @@ export default function RegisterCompany() {
               </div>
             </div>
 
-            {/* Plan selection */}
+            {/* Plan info (display only — backend always starts new companies on Free) */}
             <div>
               <div className="flex items-baseline justify-between mb-2">
-                <label className="label-eyebrow">Choose a plan</label>
-                <span className="text-[10px] text-fog/70 font-mono">change anytime</span>
+                <label className="label-eyebrow">Available plans</label>
+                <span className="text-[10px] text-fog/70 font-mono">starts on Free</span>
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {PLAN_OPTIONS.map((p) => {
-                  const selected = form.plan === p.key
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => setForm({ ...form, plan: p.key })}
-                      aria-pressed={selected}
-                      className={`relative text-left rounded-xl border p-3 transition-all duration-150 ${
-                        selected
-                          ? 'border-accent bg-accent/10 ring-1 ring-accent/40 shadow-sm'
-                          : 'border-panelBorder hover:border-accent/40 hover:bg-panelAlt/30'
-                      }`}
-                    >
-                      {p.popular && (
-                        <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-accent/15 text-accent text-[9px] font-semibold font-mono px-1.5 py-0.5 border border-accent/25">
-                          <Star size={8} className="fill-accent" /> Popular
-                        </span>
-                      )}
-                      <span className="block text-xs font-semibold text-paper">{p.name}</span>
-                      <div className="mt-1 flex items-baseline gap-0.5">
-                        <span className="text-lg font-bold font-display text-paper leading-none">
-                          {p.price === 0 ? 'Free' : `$${p.price}`}
-                        </span>
-                        {p.price > 0 && (
-                          <span className="text-[9px] text-fog font-mono">/user·mo</span>
+              <p className="text-[10px] text-fog/80 mb-2 leading-snug">
+                Every new company starts on Free. You can upgrade any time after signup from the
+                Subscription page.
+              </p>
+              {plansLoading ? (
+                <div className="flex items-center justify-center py-6 text-fog">
+                  <Loader2 size={16} className="animate-spin" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2.5">
+                  {plans.map((p) => {
+                    const isFree = p.key === 'FREE'
+                    const price = p.monthlyUsd ?? p.pricePerUser ?? 0
+                    return (
+                      <div
+                        key={p.key}
+                        className={`relative text-left rounded-xl border p-3 ${
+                          isFree ? 'border-accent bg-accent/10 ring-1 ring-accent/40' : 'border-panelBorder opacity-70'
+                        }`}
+                      >
+                        {p.key === POPULAR_PLAN_KEY && (
+                          <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-accent/15 text-accent text-[9px] font-semibold font-mono px-1.5 py-0.5 border border-accent/25">
+                            <Star size={8} className="fill-accent" /> Popular
+                          </span>
+                        )}
+                        <span className="block text-xs font-semibold text-paper">{p.name}</span>
+                        <div className="mt-1 flex items-baseline gap-0.5">
+                          <span className="text-lg font-bold font-display text-paper leading-none">
+                            {price === 0 ? 'Free' : `$${price}`}
+                          </span>
+                          {price > 0 && <span className="text-[9px] text-fog font-mono">/user·mo</span>}
+                        </div>
+                        <p className="text-[10px] text-fog mt-1.5 leading-snug">{planMeta(p)}</p>
+                        {isFree && (
+                          <span className="absolute bottom-2 right-2 inline-flex items-center justify-center h-4 w-4 rounded-full bg-accent text-white">
+                            <Check size={11} strokeWidth={3} />
+                          </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-fog mt-1.5 leading-snug">{p.meta}</p>
-                      {selected && (
-                        <span className="absolute bottom-2 right-2 inline-flex items-center justify-center h-4 w-4 rounded-full bg-accent text-white">
-                          <Check size={11} strokeWidth={3} />
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Error Message Display */}

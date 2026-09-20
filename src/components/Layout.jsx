@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
 import ChatDock from './ChatDock.jsx'
 import Logo from './Logo.jsx'
+
 
 // Static route map for precise title lookups
 const ROUTE_TITLES = {
@@ -91,14 +92,23 @@ export default function Layout() {
         </main>
 
         {/* Copyright / brand footer */}
-        <footer className="border-t border-panelBorder/40 px-4 sm:px-6 py-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-fog">
-            <Logo size={15} className="text-accent shrink-0" />
-            <span className="text-[11px] font-mono">
-              © {new Date().getFullYear()} Orbitly by Kvant. All rights reserved.
-            </span>
-          </div>
-        </footer>
+          <footer className="border-t border-panelBorder/40 px-4 sm:px-6 py-4">
+            <div className="max-w-7xl mx-auto flex flex-col items-center gap-2">
+              <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-fog/70">
+                <Link to="/about" className="hover:text-accent transition-colors">About</Link>
+                <Link to="/contact" className="hover:text-accent transition-colors">Contact</Link>
+                <Link to="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link>
+                <Link to="/delivery-policy" className="hover:text-accent transition-colors">Delivery Policy</Link>
+                <Link to="/refund-policy" className="hover:text-accent transition-colors">Refund Policy</Link>
+              </nav>
+              <div className="flex items-center gap-2 text-fog">
+                <Logo size={15} className="text-accent shrink-0" />
+                <span className="text-[11px] font-mono">
+                  © {new Date().getFullYear()} Orbitly by Kvant. All rights reserved.
+                </span>
+              </div>
+            </div>
+          </footer>
       </div>
 
       {/* Global Floating Chat Dock */}

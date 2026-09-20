@@ -20,6 +20,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
 const FounderConsole = lazy(() => import('./pages/FounderConsole.jsx'))
 const Pricing = lazy(() => import('./pages/Pricing.jsx'))
 const Subscription = lazy(() => import('./pages/Subscription.jsx'))
+const BillingCallback = lazy(() => import('./pages/BillingCallback.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
@@ -33,6 +34,11 @@ const UsersPage = lazy(() => import('./pages/UsersPage.jsx'))
 const WorkspacesPage = lazy(() => import('./pages/WorkspacesPage.jsx'))
 const TeamsPage = lazy(() => import('./pages/TeamsPage.jsx'))
 const Profile = lazy(() => import('./pages/Profile.jsx'))
+const AboutUs = lazy(() => import('./pages/AboutUs.jsx'))
+const ContactUs = lazy(() => import('./pages/ContactUs.jsx'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'))
+const DeliveryPolicy = lazy(() => import('./pages/DeliveryPolicy.jsx'))
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy.jsx'))
 
 function RouteFallback() {
   return (
@@ -64,6 +70,13 @@ function RootGate() {
   )
 }
 
+// The founder (SUPER_ADMIN) has no personal task dashboard; send them straight
+// to the platform console instead of the (empty) workspace dashboard.
+function HomeIndex() {
+  const { hasRole } = useAuth()
+  return hasRole('SUPER_ADMIN') ? <Navigate to="/console" replace /> : <Dashboard />
+}
+
 export default function App() {
   return (
     <LanguageProvider>
@@ -80,9 +93,24 @@ export default function App() {
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
               <Route path="/pricing" element={<Pricing />} />
 
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/contact" element={<ContactUs />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/delivery-policy" element={<DeliveryPolicy />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+
+              <Route
+                path="/billing/callback"
+                element={
+                  <ProtectedRoute>
+                    <BillingCallback />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Root shell — public landing for guests, dashboard for members */}
               <Route path="/" element={<RootGate />}>
-                <Route index element={<Dashboard />} />
+                <Route index element={<HomeIndex />} />
                 <Route path="board" element={<KanbanBoard />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="messages" element={<MessagesPage />} />

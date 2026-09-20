@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, Loader2, Star } from 'lucide-react'
 import { plans as plansApi } from '../api/client.js'
@@ -30,11 +30,33 @@ function limitLabel(value, unlimited, ar, noun) {
   return ar ? `حتى ${value} ${noun}` : `Up to ${value} ${noun}`
 }
 
+// Small segmented control shared by both toggles.
+function Segmented({ options, value, onChange }) {
+  return (
+    <div className="inline-flex rounded-lg border border-panelBorder bg-panelAlt/40 p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            value === o.value ? 'bg-accent text-white' : 'text-fog hover:text-paper'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function Pricing() {
   const { lang } = useI18n()
   const ar = lang === 'ar'
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
+  const [cycle, setCycle] = useState('monthly') // 'monthly' | 'yearly'
+  const [currency, setCurrency] = useState('usd') // 'usd' | 'egp'
 
   useEffect(() => {
     let cancelled = false
@@ -48,11 +70,43 @@ export default function Pricing() {
     }
   }, [])
 
+  const yearly = cycle === 'yearly'
+  const egp = currency === 'egp'
+
+  // Format a money amount in the active currency.
+  const money = (amount) => {
+    const n = Number(amount || 0).toLocaleString(ar ? 'ar-EG' : 'en-US')
+    return egp ? (ar ? `${n} ج.م` : `${n} EGP`) : `$${n}`
+  }
+
+  // The price to show for a plan given the active cycle + currency, plus the
+  // per-month equivalent used in the "billed yearly" sub-line.
+  const priceFor = (p) => {
+    if (yearly) return egp ? p.yearlyEgp : p.yearlyUsd
+    return egp ? p.monthlyEgp : p.monthlyUsd
+  }
+  const perMonthEquivalent = (p) => (egp ? p.yearlyEgp : p.yearlyUsd) / 12
+
+  const cycleOptions = useMemo(
+    () => [
+      { value: 'monthly', label: ar ? 'شهري' : 'Monthly' },
+      { value: 'yearly', label: ar ? 'سنوي' : 'Yearly' }
+    ],
+    [ar]
+  )
+  const currencyOptions = useMemo(
+    () => [
+      { value: 'usd', label: ar ? 'دولار $' : 'USD $' },
+      { value: 'egp', label: ar ? 'جنيه ج.م' : 'EGP' }
+    ],
+    [ar]
+  )
+
   return (
     <div className="min-h-screen bg-panel px-4 py-14 sm:px-6" dir={ar ? 'rtl' : 'ltr'}>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center space-y-3 mb-12">
+        <div className="text-center space-y-3 mb-8">
           <div className="flex items-center justify-center gap-2 text-accent">
             <Logo size={28} />
             <span className="font-display text-2xl font-bold text-paper">Orbitly</span>
@@ -62,9 +116,20 @@ export default function Pricing() {
           </h1>
           <p className="text-fog text-sm max-w-2xl mx-auto">
             {ar
-              ? 'لكل مستخدم/شهر، فوترة سنوية. أقل من المنافسين — بلا مفاجآت.'
-              : 'Per user / month, billed annually. Less than the competition — no surprises.'}
+              ? 'لكل مستخدم. اختر شهري أو سنوي (شهرين مجانًا)، وادفع بالدولار أو بالجنيه المصري.'
+              : 'Per user. Choose monthly or yearly (2 months free), pay in USD or EGP.'}
           </p>
+        </div>
+
+        {/* Toggles */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+          <Segmented options={cycleOptions} value={cycle} onChange={setCycle} />
+          {yearly && (
+            <span className="inline-flex items-center rounded-full bg-completed/15 text-completed px-2.5 py-1 text-[11px] font-semibold">
+              {ar ? 'وفّر شهرين' : '2 months free'}
+            </span>
+          )}
+          <Segmented options={currencyOptions} value={currency} onChange={setCurrency} />
         </div>
 
         {loading ? (
@@ -76,6 +141,8 @@ export default function Pricing() {
             {plans.map((p) => {
               const highlight = p.key === 'PRO'
               const feats = FEATURES[p.key]?.[ar ? 'ar' : 'en'] ?? []
+              const free = p.monthlyUsd === 0
+              const amount = priceFor(p)
               return (
                 <div
                   key={p.key}
@@ -89,12 +156,28 @@ export default function Pricing() {
                     </span>
                   )}
                   <h2 className="font-display text-lg font-bold text-paper">{p.name}</h2>
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className="font-display text-3xl font-bold text-paper">${p.pricePerUser}</span>
-                    <span className="text-fog text-xs font-mono">/{ar ? 'مستخدم/شهر' : 'user/mo'}</span>
+
+                  <div className="mt-3 min-h-[3.5rem]">
+                    {free ? (
+                      <span className="font-display text-3xl font-bold text-paper">{ar ? 'مجانًا' : 'Free'}</span>
+                    ) : (
+                      <>
+                        <div className="flex items-baseline gap-1 flex-wrap">
+                          <span className="font-display text-3xl font-bold text-paper">{money(amount)}</span>
+                          <span className="text-fog text-xs font-mono">
+                            /{ar ? 'مستخدم' : 'user'}/{yearly ? (ar ? 'سنة' : 'yr') : ar ? 'شهر' : 'mo'}
+                          </span>
+                        </div>
+                        {yearly && (
+                          <p className="text-[11px] text-fog font-mono mt-0.5">
+                            ≈ {money(Math.round(perMonthEquivalent(p)))}/{ar ? 'شهر' : 'mo'} · {ar ? 'فوترة سنوية' : 'billed yearly'}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
 
-                  <div className="mt-4 space-y-1.5 text-xs">
+                  <div className="mt-2 space-y-1.5 text-xs">
                     <p className="text-paper font-semibold">
                       {limitLabel(p.maxMembers, p.unlimitedMembers, ar, ar ? 'عضو' : 'members')}
                     </p>
@@ -120,7 +203,7 @@ export default function Pricing() {
                         : 'border border-panelBorder text-paper hover:border-accent hover:text-accent'
                     }`}
                   >
-                    {p.pricePerUser === 0 ? (ar ? 'ابدأ مجانًا' : 'Start free') : ar ? 'ابدأ الآن' : 'Get started'}
+                    {free ? (ar ? 'ابدأ مجانًا' : 'Start free') : ar ? 'ابدأ الآن' : 'Get started'}
                   </Link>
                 </div>
               )
