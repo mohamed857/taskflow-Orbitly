@@ -53,6 +53,12 @@ export default function Layout() {
     return () => window.removeEventListener('plan:limit', onPlanLimit)
   }, [navigate])
 
+  useEffect(() => {
+  const onLocked = () => navigate('/billing/locked')
+  window.addEventListener('subscription:locked', onLocked)
+  return () => window.removeEventListener('subscription:locked', onLocked)
+}, [navigate])
+
   // Compute title dynamically based on location
   const title = useMemo(
     () => resolvePageTitle(location.pathname),

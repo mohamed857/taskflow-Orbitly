@@ -21,6 +21,7 @@ const FounderConsole = lazy(() => import('./pages/FounderConsole.jsx'))
 const Pricing = lazy(() => import('./pages/Pricing.jsx'))
 const Subscription = lazy(() => import('./pages/Subscription.jsx'))
 const BillingCallback = lazy(() => import('./pages/BillingCallback.jsx'))
+const BillingLocked = lazy(() => import('./pages/BillingLocked.jsx'))
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
 const KanbanBoard = lazy(() => import('./pages/KanbanBoard.jsx'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'))
@@ -99,14 +100,8 @@ export default function App() {
               <Route path="/delivery-policy" element={<DeliveryPolicy />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
 
-              <Route
-                path="/billing/callback"
-                element={
-                  <ProtectedRoute>
-                    <BillingCallback />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/billing/callback"element={<ProtectedRoute><BillingCallback /></ProtectedRoute>}/>
+              <Route path="/billing/locked"element={<ProtectedRoute><BillingLocked/></ProtectedRoute>}/>
 
               {/* Root shell — public landing for guests, dashboard for members */}
               <Route path="/" element={<RootGate />}>
@@ -119,14 +114,7 @@ export default function App() {
                 <Route path="tasks/assigned" element={<AssignedTasks />} />
 
                 {/* Role-Scoped Task Views */}
-                <Route
-                  path="tasks/workspace"
-                  element={
-                    <RequireRole roles={['ADMIN', 'MANAGER']}>
-                      <WorkspaceTasks />
-                    </RequireRole>
-                  }
-                />
+                <Route path="tasks/workspace" element={<RequireRole roles={['ADMIN', 'MANAGER']}><WorkspaceTasks /> </RequireRole>}/>
                 <Route
                   path="tasks/team"
                   element={

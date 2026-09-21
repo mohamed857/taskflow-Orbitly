@@ -1,13 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Check, Loader2, Star, Users, Layers, Lock } from 'lucide-react'
+import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Check, Loader2, Star, Users, Layers, Lock, AlertTriangle } from 'lucide-react'
 import { plans as plansApi, subscription as subscriptionApi, payments as paymentsApi } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useI18n } from '../context/LanguageContext.jsx'
 
-// Prices shown here come straight from GET /api/plans (monthlyUsd/yearlyUsd/
-// monthlyEgp/yearlyEgp) — the backend's PricingService is the only source of
-// truth for the amount and the exchange rate, so nothing is computed here.
 function formatPrice(plan, cycle, currency, ar) {
   const isYearly = cycle === 'YEARLY'
   if (currency === 'EGP') {
@@ -45,10 +43,48 @@ function UsageBar({ icon: Icon, label, used, limit, unlimited, ar }) {
   )
 }
 
+function ConfirmDowngradeModal({ plan, currentPlanName, ar, loading, onCancel, onConfirm }) {
+  if (!plan) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <div className="glass-panel max-w-sm w-full p-6">
+        <h3 className="font-display font-bold text-paper text-lg mb-2">
+          {ar ? `التنزيل لباقة ${plan.name}؟` : `Downgrade to ${plan.name}?`}
+        </h3>
+        <p className="text-fog text-xs leading-relaxed mb-4">
+          {ar
+            ? `هتنزّل من ${currentPlanName} لـ ${plan.name} فورًا. لو تجاوزت حدود الباقة الجديدة لاحقًا (عدد الأعضاء أو الفرق)، هتحتاج تشيل أعضاء أو فرق قبل ما تقدر تستخدمها. مفيش استرجاع للمبلغ المدفوع عن الفترة الحالية.`
+            : `You'll switch from ${currentPlanName} to ${plan.name} immediately. If you later exceed the new plan's limits (members or teams), you'll need to remove some before continuing. Amounts already paid for the current period are not refunded.`}
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 h-9 rounded-lg border border-panelBorder text-paper text-xs font-semibold hover:border-fog transition-colors disabled:opacity-50"
+          >
+            {ar ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 h-9 rounded-lg bg-overdue text-white text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {loading && <Loader2 size={13} className="animate-spin" />}
+            {ar ? 'نعم، نزّل الباقة' : 'Yes, downgrade'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Subscription() {
   const { hasRole } = useAuth()
   const { push } = useToast()
   const { lang } = useI18n()
+  const navigate = useNavigate()
   const ar = lang === 'ar'
   const isAdmin = hasRole('ADMIN')
 
@@ -56,10 +92,9 @@ export default function Subscription() {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [changing, setChanging] = useState(null)
-  const [cycle, setCycle] = useState('MONTHLY') // MONTHLY | YEARLY
-  // Paymob only settles in EGP today, so USD is display-only and disabled -
-  // default to EGP since that's what will actually be charged.
-  const [currency, setCurrency] = useState('EGP') // USD | EGP
+  const [confirmDowngrade, setConfirmDowngrade] = useState(null)
+  const [cycle, setCycle] = useState('MONTHLY')
+  const [currency, setCurrency] = useState('EGP')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -78,8 +113,10 @@ export default function Subscription() {
     load()
   }, [load])
 
-  // A plan is a blocked downgrade when its limits are below current usage -
-  // switching to it would immediately put the workspace over its own limits.
+  useEffect(() => {
+    if (sub?.pastDue) navigate('/billing/locked', { replace: true })
+  }, [sub?.pastDue, navigate])
+
   const isDowngradeBlocked = useCallback(
     (p) => {
       if (!sub) return false
@@ -94,8 +131,10 @@ export default function Subscription() {
     if (!isAdmin || key === sub?.plan || changing) return
     setChanging(key)
 
-    // FREE has nothing to pay for, so it stays an instant, direct switch.
-    if (pricePerUser === 0) {
+    const hasActivePeriod = Boolean(sub?.currentPeriodEnd) && sub?.renewalDue === false && sub?.pastDue === false
+    const isDirectChange = pricePerUser === 0 || hasActivePeriod
+
+    if (isDirectChange) {
       try {
         const updated = await subscriptionApi.change(key)
         setSub(updated)
@@ -108,9 +147,6 @@ export default function Subscription() {
       return
     }
 
-    // Any paid plan goes through Paymob. The actual upgrade only happens
-    // server-side via Paymob's webhook once payment clears — this call just
-    // opens the payment page. /billing/callback polls for the real result.
     try {
       const res = await paymentsApi.checkout(key, cycle)
       sessionStorage.setItem(
@@ -121,6 +157,32 @@ export default function Subscription() {
     } catch (err) {
       push(err.message || (ar ? 'تعذر بدء عملية الدفع.' : 'Could not start checkout.'), 'error')
       setChanging(null)
+    }
+  }
+
+  const renewNow = async () => {
+    if (!isAdmin || !sub || changing) return
+    setChanging(sub.plan)
+    try {
+      const res = await paymentsApi.checkout(sub.plan, sub.billingCycle || cycle)
+      sessionStorage.setItem(
+        'tf_pending_checkout',
+        JSON.stringify({ fromPlan: sub.plan, toPlan: sub.plan, startedAt: Date.now() })
+      )
+      window.location.href = res.iframeUrl
+    } catch (err) {
+      push(err.message || (ar ? 'تعذر بدء عملية الدفع.' : 'Could not start checkout.'), 'error')
+      setChanging(null)
+    }
+  }
+
+  const handlePlanClick = (p) => {
+    const targetPrice = p.monthlyUsd ?? p.pricePerUser ?? 0
+    const currentPrice = sub?.pricePerUser ?? 0
+    if (targetPrice < currentPrice) {
+      setConfirmDowngrade(p)
+    } else {
+      switchPlan(p.key, p.pricePerUser)
     }
   }
 
@@ -145,7 +207,34 @@ export default function Subscription() {
         </p>
       </div>
 
-      {/* Usage */}
+      {sub?.renewalDue && (
+        <div className="glass-panel border-gold/40 bg-gold/10 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle size={16} className="text-gold shrink-0 mt-0.5" />
+            <p className="text-xs text-paper leading-relaxed">
+              {ar
+                ? `التجديد مطلوب — ادفع قبل ${sub.graceEndsAt ? new Date(sub.graceEndsAt).toLocaleString('ar-EG') : ''} عشان ميتقفلش حسابك.`
+                : `Renewal required — pay before ${sub.graceEndsAt ? new Date(sub.graceEndsAt).toLocaleString('en-US') : ''} to avoid your account being locked.`}
+            </p>
+          </div>
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={renewNow}
+              disabled={changing === sub.plan}
+              className="shrink-0 h-9 px-4 rounded-lg bg-gold text-ink text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {changing === sub.plan && <Loader2 size={13} className="animate-spin" />}
+              {ar ? 'جدّد الآن' : 'Renew now'}
+            </button>
+          ) : (
+            <span className="text-[10px] text-fog/70 font-mono shrink-0">
+              {ar ? 'المالك فقط يقدر يجدد' : 'Only the owner can renew'}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <UsageBar
           icon={Users}
@@ -165,7 +254,6 @@ export default function Subscription() {
         />
       </div>
 
-      {/* Plans */}
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <p className="label-eyebrow text-xs font-mono text-fog">
@@ -173,7 +261,6 @@ export default function Subscription() {
           </p>
 
           <div className="flex items-center gap-2">
-            {/* Billing cycle toggle */}
             <div className="inline-flex rounded-lg border border-panelBorder p-0.5 bg-panelAlt/40">
               {['MONTHLY', 'YEARLY'].map((c) => (
                 <button
@@ -194,9 +281,6 @@ export default function Subscription() {
               ))}
             </div>
 
-            {/* Currency toggle - USD is display-only for now: Paymob only
-                settles in EGP, so switching to USD would show a price that
-                doesn't match what's actually charged at checkout. */}
             <div
               className="inline-flex rounded-lg border border-panelBorder p-0.5 bg-panelAlt/40"
               title={ar ? 'الدفع بالدولار غير متاح حاليًا' : 'USD checkout is not available yet'}
@@ -279,7 +363,7 @@ export default function Subscription() {
                   ) : isAdmin ? (
                     <button
                       type="button"
-                      onClick={() => switchPlan(p.key, p.pricePerUser)}
+                      onClick={() => handlePlanClick(p)}
                       disabled={changing === p.key}
                       className="h-9 w-full rounded-lg border border-panelBorder text-paper text-xs font-semibold hover:border-accent hover:text-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
@@ -304,6 +388,19 @@ export default function Subscription() {
           </p>
         )}
       </div>
+
+      <ConfirmDowngradeModal
+        plan={confirmDowngrade}
+        currentPlanName={sub?.planName}
+        ar={ar}
+        loading={changing === confirmDowngrade?.key}
+        onCancel={() => setConfirmDowngrade(null)}
+        onConfirm={() => {
+          const plan = confirmDowngrade
+          setConfirmDowngrade(null)
+          switchPlan(plan.key, plan.pricePerUser)
+        }}
+      />
     </div>
   )
 }
